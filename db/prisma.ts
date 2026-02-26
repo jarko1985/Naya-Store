@@ -1,9 +1,13 @@
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import { PrismaClient } from '@prisma/client';
-import ws from 'ws';
 
-neonConfig.webSocketConstructor = ws;
+// Use WebSocket only in Node (e.g. dev); on Vercel serverless, Neon uses fetch and ws can cause runtime errors
+if (typeof process !== 'undefined' && process.env.VERCEL !== '1') {
+  const ws = require('ws');
+  neonConfig.webSocketConstructor = ws;
+}
+
 const connectionString = `${process.env.DATABASE_URL}`;
 
 const pool = new Pool({ connectionString });
