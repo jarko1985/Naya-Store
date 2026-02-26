@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default async function Home()  {
   const latestProducts = await getLatestProducts();
-    console.log(latestProducts);
+  
     
   return (
     <div>

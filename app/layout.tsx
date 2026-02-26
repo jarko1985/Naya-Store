@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import { APP_NAME, APP_DESCRIPTION, SERVER_URL } from "@/lib/constants";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
-
+import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -33,6 +33,7 @@ export default function Layout({
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           {children}
+          <Toaster/>
         </ThemeProvider>
       </body>
     </html>
