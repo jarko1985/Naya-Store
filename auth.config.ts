@@ -13,14 +13,20 @@ export const authConfig: NextAuthConfig = {
   },
   providers: [], // Required by type; only used for route handlers, not middleware
   callbacks: {
-    authorized({ request }) {
-      if (!request.cookies.get('sessionCartId')) {
-        const sessionCartId = crypto.randomUUID();
-        const response = NextResponse.next({
-          request: { headers: request.headers },
-        });
-        response.cookies.set('sessionCartId', sessionCartId);
-        return response;
+    authorized({ request, auth }) {
+      const protectedPaths = [
+       /\/shipping-address/,
+       /\/payment-method/,
+       /\/place-order/,
+       /\/profile/,
+       /\/user\/(.*)/,
+       /\/order\/(.*)/,
+       /\/admin/,
+      ];
+      const {pathname} = request.nextUrl;
+      if(!auth && protectedPaths.some((p)=>p.test(pathname))) return false
+      if (protectedPaths.some((path) => request.nextUrl.pathname.match(path))) {
+        return !!auth;
       }
       return true;
     },

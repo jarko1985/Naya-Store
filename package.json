@@ -13,9 +13,13 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
+    "@hookform/resolvers": "^5.2.2",
     "@neondatabase/serverless": "^1.0.2",
+    "@paypal/react-paypal-js": "^8.9.2",
     "@prisma/adapter-neon": "^6.5.0",
     "@radix-ui/react-toast": "^1.2.15",
+    "@stripe/react-stripe-js": "^5.6.0",
+    "@stripe/stripe-js": "^8.8.0",
     "add": "^2.0.6",
     "bcrypt-ts-edge": "^3.0.1",
     "class-variance-authority": "^0.7.1",
@@ -24,13 +28,17 @@
     "next": "16.1.6",
     "next-auth": "^5.0.0-beta.30",
     "next-themes": "^0.4.6",
+    "query-string": "^9.3.1",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-hook-form": "^7.71.2",
     "react-icons": "^5.5.0",
     "sonner": "^2.0.7",
+    "stripe": "^20.4.0",
     "tailwind-merge": "^3.5.0",
-    "ws": "^8.19.0"
+    "ws": "^8.19.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@prisma/client": "6.5.0",
