@@ -121,22 +121,34 @@ const calcPrice = (items: CartItem[]) => {
   }
 
   export async function getMyCart() {
-    // Check for cart cookie
     const sessionCartId = (await cookies()).get('sessionCartId')?.value;
-    if (!sessionCartId) throw new Error('Cart session not found');
-  
-    // Get session and user ID
+    if (!sessionCartId) return undefined;
+
     const session = await auth();
     const userId = session?.user?.id ? (session.user.id as string) : undefined;
-  
-    // Get user cart from database
-    const cart = await prisma.cart.findFirst({
-      where: userId ? { userId: userId } : { sessionCartId: sessionCartId },
+
+    let cart = await prisma.cart.findFirst({
+      where: userId ? { userId } : { sessionCartId },
     });
-  
+
+    if (userId && !cart) {
+      const sessionCart = await prisma.cart.findFirst({
+        where: { sessionCartId },
+      });
+      if (sessionCart) {
+        await prisma.cart.deleteMany({ where: { userId } });
+        await prisma.cart.update({
+          where: { id: sessionCart.id },
+          data: { userId },
+        });
+        cart = await prisma.cart.findFirst({
+          where: { id: sessionCart.id },
+        });
+      }
+    }
+
     if (!cart) return undefined;
-  
-    // Convert decimals and return
+
     return convertToPlainObject({
       ...cart,
       items: cart.items as CartItem[],
