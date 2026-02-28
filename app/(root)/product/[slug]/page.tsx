@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { getMyCart,removeItemFromCart } from '@/lib/actions/cart.actions';
 import { getProductBySlug } from "@/lib/actions/product.action";
 import { notFound } from "next/navigation";
+import ReviewList from './review-list';
 
 
 
@@ -90,11 +91,11 @@ const ProductDetailsPage =async(props: {
       </section>
       <section className='mt-10'>
         <h2 className='h2-bold mb-5'>Customer Reviews</h2>
-        {/* <ReviewList
+        <ReviewList
           userId={userId || ''}
           productId={product.id}
           productSlug={product.slug}
-        /> */}
+        />
       </section>
     </>
   );

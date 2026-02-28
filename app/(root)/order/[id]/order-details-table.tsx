@@ -73,6 +73,7 @@ const OrderDetailsTable = ({
 
     if (!res.success) {
       toast.error(res.message);
+      throw new Error(res.message);
     }
 
     return res.data;
