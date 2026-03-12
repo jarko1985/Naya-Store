@@ -12,6 +12,7 @@ import {
   import { auth } from '@/auth';
   import { redirect } from 'next/navigation';
   import SignUpForm from './sign-up-form';
+  import SocialAuthButtons from '@/components/shared/social-auth-buttons';
   
   export const metadata: Metadata = {
     title: 'Sign Up',
@@ -50,6 +51,7 @@ import {
           </CardHeader>
           <CardContent className='space-y-4'>
             <SignUpForm />
+            <SocialAuthButtons callbackUrl={callbackUrl} />
           </CardContent>
         </Card>
       </div>

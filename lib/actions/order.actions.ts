@@ -12,6 +12,7 @@ import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { paypal } from '../paypal';
 import { revalidatePath } from 'next/cache';
 import { Prisma } from '@prisma/client';
+import { sendPurchaseReceipt } from '@/email';
 
 export async function createOrder() {
     try {
@@ -251,13 +252,13 @@ export async function createOrder() {
   
     if (!updatedOrder) throw new Error('Order not found');
   
-    // sendPurchaseReceipt({
-    //   order: {
-    //     ...updatedOrder,
-    //     shippingAddress: updatedOrder.shippingAddress as ShippingAddress,
-    //     paymentResult: updatedOrder.paymentResult as PaymentResult,
-    //   },
-    // });
+    sendPurchaseReceipt({
+      order: {
+        ...updatedOrder,
+        shippingAddress: updatedOrder.shippingAddress as ShippingAddress,
+        paymentResult: updatedOrder.paymentResult as PaymentResult,
+      },
+    });
   }
   export async function updateOrderToPaidCOD(orderId: string) {
     try {

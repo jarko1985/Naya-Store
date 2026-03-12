@@ -2,10 +2,29 @@ import NextAuth from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/db/prisma';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
+import TwitterProvider from 'next-auth/providers/twitter';
 import { compareSync } from 'bcrypt-ts-edge';
 import type { NextAuthConfig } from 'next-auth';
 import { authConfig } from '@/auth.config';
 import { cookies } from 'next/headers';
+import { randomUUID } from 'crypto';
+
+// Twitter/X does not return an email address. Override createUser to generate
+// a unique placeholder so Prisma's NOT NULL email constraint is satisfied.
+const prismaAdapter = PrismaAdapter(prisma);
+const customAdapter = {
+  ...prismaAdapter,
+  createUser: async ({ id: _id, ...data }: Parameters<NonNullable<typeof prismaAdapter.createUser>>[0]) => {
+    return prisma.user.create({
+      data: {
+        ...data,
+        email: data.email ?? `oauth_${randomUUID()}@noreply.naya.store`,
+        name: data.name ?? undefined,
+      },
+    });
+  },
+};
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -13,8 +32,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: 'jwt' as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  adapter: PrismaAdapter(prisma),
+  adapter: customAdapter,
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
+    TwitterProvider({
+      clientId: process.env.TWITTER_CLIENT_ID as string,
+      clientSecret: process.env.TWITTER_CLIENT_SECRET as string,
+    }),
     CredentialsProvider({
       credentials: {
         email: { type: 'email' },
