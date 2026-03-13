@@ -1,10 +1,23 @@
 import { insertProductSchema, insertCartSchema, cartItemSchema, shippingAddressSchema, insertOrderItemSchema, insertOrderSchema, paymentResultSchema, insertReviewSchema } from '@/lib/validators';
 import { z } from 'zod';
+
+export type ProductVariant = {
+  id: string;
+  productId: string;
+  color: string;
+  size: string;
+  price: string;
+  stock: number;
+  image: string;
+  createdAt: Date;
+};
+
 export type Product = z.infer<typeof insertProductSchema> & {
     id: string;
     rating: string;
     numReviews: number;
     createdAt: Date;
+    variants?: ProductVariant[];
   };
   export type Cart = z.infer<typeof insertCartSchema>;
   export type CartItem = z.infer<typeof cartItemSchema>;  

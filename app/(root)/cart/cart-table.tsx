@@ -54,7 +54,7 @@ function AddButton({ item }: { item: CartItem }) {
         type='button'
         onClick={() =>
           startTransition(async () => {
-            const res = await removeItemFromCart(item.productId);
+            const res = await removeItemFromCart(item.productId, item.variantId);
   
             if (!res.success) {
               toast.error(res.message);
@@ -95,7 +95,7 @@ function AddButton({ item }: { item: CartItem }) {
                 </TableHeader>
                 <TableBody>
                   {cart.items.map((item) => (
-                    <TableRow key={item.slug}>
+                    <TableRow key={`${item.slug}-${item.variantId ?? 'base'}`}>
                       <TableCell>
                         <Link
                           href={`/product/${item.slug}`}
@@ -107,7 +107,14 @@ function AddButton({ item }: { item: CartItem }) {
                             width={50}
                             height={50}
                           />
-                          <span className='px-2'>{item.name}</span>
+                          <div className='px-2'>
+                            <p>{item.name}</p>
+                            {(item.color || item.size) && (
+                              <p className='text-xs text-muted-foreground'>
+                                {[item.color, item.size].filter(Boolean).join(' / ')}
+                              </p>
+                            )}
+                          </div>
                         </Link>
                       </TableCell>
                       <TableCell className='flex-center gap-2'>

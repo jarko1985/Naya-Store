@@ -173,10 +173,10 @@ const OrderDetailsTable = ({
                 </TableHeader>
                 <TableBody>
                   {orderitems.map((item) => (
-                    <TableRow key={item.slug}>
+                    <TableRow key={`${item.slug}-${item.variantId ?? 'base'}`}>
                       <TableCell>
                         <Link
-                          href={`/product/{item.slug}`}
+                          href={`/product/${item.slug}`}
                           className='flex items-center'
                         >
                           <Image
@@ -185,7 +185,14 @@ const OrderDetailsTable = ({
                             width={50}
                             height={50}
                           />
-                          <span className='px-2'>{item.name}</span>
+                          <div className='px-2'>
+                            <p>{item.name}</p>
+                            {(item.color || item.size) && (
+                              <p className='text-xs text-muted-foreground'>
+                                {[item.color, item.size].filter(Boolean).join(' / ')}
+                              </p>
+                            )}
+                          </div>
                         </Link>
                       </TableCell>
                       <TableCell>

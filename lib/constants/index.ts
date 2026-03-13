@@ -58,3 +58,22 @@ export const reviewFormDefaultValues = {
 };
 
 export const SENDER_EMAIL = process.env.SENDER_EMAIL || 'no-reply@naya.store';
+
+export const PRODUCT_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+
+export const PRODUCT_COLORS = [
+  'Black',
+  'White',
+  'Red',
+  'Green',
+  'Blue',
+  'Yellow',
+  'Orange',
+  'Purple',
+  'Pink',
+  'Brown',
+  'Gray',
+  'Navy',
+  'Beige',
+  'Teal',
+];

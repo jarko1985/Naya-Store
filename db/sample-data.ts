@@ -1,6 +1,8 @@
 // Placeholder used for all new category seed products.
 // Replace each entry's images array with real product images later.
 const PH = '/images/placeholder.jpg';
+// Fallback image used for variant images in seed data.
+const FB = '/images/fallback_product_image.jpg';
 
 const sampleData = {
   users: [
@@ -1443,6 +1445,90 @@ const sampleData = {
       stock: 18,
       isFeatured: false,
       banner: null,
+    },
+  ],
+
+  // Variants for select products (keyed by productSlug)
+  productVariants: [
+    {
+      productSlug: 'polo-sporting-stretch-shirt',
+      variants: [
+        { color: 'White', size: 'S',   price: '57.99', stock: 4, image: FB },
+        { color: 'White', size: 'M',   price: '57.99', stock: 6, image: FB },
+        { color: 'White', size: 'L',   price: '57.99', stock: 5, image: FB },
+        { color: 'White', size: 'XL',  price: '59.99', stock: 3, image: FB },
+        { color: 'Blue',  size: 'S',   price: '57.99', stock: 4, image: FB },
+        { color: 'Blue',  size: 'M',   price: '57.99', stock: 7, image: FB },
+        { color: 'Blue',  size: 'L',   price: '57.99', stock: 5, image: FB },
+        { color: 'Blue',  size: 'XL',  price: '59.99', stock: 2, image: FB },
+      ],
+    },
+    {
+      productSlug: 'brooks-brothers-long-sleeved-shirt',
+      variants: [
+        { color: 'White', size: 'S',   price: '83.90', stock: 3, image: FB },
+        { color: 'White', size: 'M',   price: '83.90', stock: 5, image: FB },
+        { color: 'White', size: 'L',   price: '83.90', stock: 4, image: FB },
+        { color: 'White', size: 'XL',  price: '85.90', stock: 2, image: FB },
+        { color: 'Navy',  size: 'S',   price: '83.90', stock: 3, image: FB },
+        { color: 'Navy',  size: 'M',   price: '83.90', stock: 6, image: FB },
+        { color: 'Navy',  size: 'L',   price: '85.90', stock: 4, image: FB },
+        { color: 'Navy',  size: 'XL',  price: '85.90', stock: 1, image: FB },
+      ],
+    },
+    {
+      productSlug: 'tommy-hilfiger-classic-fit-dress-shirt',
+      variants: [
+        { color: 'White',  size: 'S',   price: '97.95', stock: 0, image: FB },
+        { color: 'White',  size: 'M',   price: '97.95', stock: 0, image: FB },
+        { color: 'White',  size: 'L',   price: '99.95', stock: 0, image: FB },
+        { color: 'Blue',   size: 'M',   price: '97.95', stock: 0, image: FB },
+        { color: 'Blue',   size: 'L',   price: '99.95', stock: 0, image: FB },
+      ],
+    },
+    {
+      productSlug: 'calvin-klein-slim-fit-stretch-shirt',
+      variants: [
+        { color: 'Black', size: 'S',   price: '37.95', stock: 4, image: FB },
+        { color: 'Black', size: 'M',   price: '37.95', stock: 5, image: FB },
+        { color: 'Black', size: 'L',   price: '39.95', stock: 4, image: FB },
+        { color: 'Black', size: 'XL',  price: '39.95', stock: 3, image: FB },
+        { color: 'White', size: 'S',   price: '37.95', stock: 3, image: FB },
+        { color: 'White', size: 'M',   price: '37.95', stock: 5, image: FB },
+        { color: 'White', size: 'L',   price: '39.95', stock: 2, image: FB },
+      ],
+    },
+    {
+      productSlug: 'polo-ralph-lauren-oxford-shirt',
+      variants: [
+        { color: 'White',  size: 'S',    price: '77.99', stock: 2, image: FB },
+        { color: 'White',  size: 'M',    price: '77.99', stock: 3, image: FB },
+        { color: 'White',  size: 'L',    price: '79.99', stock: 2, image: FB },
+        { color: 'White',  size: 'XL',   price: '79.99', stock: 1, image: FB },
+        { color: 'Blue',   size: 'S',    price: '77.99', stock: 3, image: FB },
+        { color: 'Blue',   size: 'M',    price: '77.99', stock: 4, image: FB },
+        { color: 'Blue',   size: 'L',    price: '79.99', stock: 3, image: FB },
+        { color: 'Blue',   size: 'XL',   price: '81.99', stock: 1, image: FB },
+        { color: 'Pink',   size: 'S',    price: '77.99', stock: 2, image: FB },
+        { color: 'Pink',   size: 'M',    price: '77.99', stock: 3, image: FB },
+      ],
+    },
+    {
+      productSlug: 'polo-classic-pink-hoodie',
+      variants: [
+        { color: 'Pink',  size: 'S',    price: '97.99', stock: 3, image: FB },
+        { color: 'Pink',  size: 'M',    price: '97.99', stock: 4, image: FB },
+        { color: 'Pink',  size: 'L',    price: '99.99', stock: 3, image: FB },
+        { color: 'Pink',  size: 'XL',   price: '99.99', stock: 2, image: FB },
+        { color: 'Pink',  size: 'XXL',  price: '101.99', stock: 1, image: FB },
+        { color: 'Gray',  size: 'S',    price: '97.99', stock: 2, image: FB },
+        { color: 'Gray',  size: 'M',    price: '97.99', stock: 3, image: FB },
+        { color: 'Gray',  size: 'L',    price: '99.99', stock: 2, image: FB },
+        { color: 'Gray',  size: 'XL',   price: '99.99', stock: 1, image: FB },
+        { color: 'Black', size: 'S',    price: '97.99', stock: 3, image: FB },
+        { color: 'Black', size: 'M',    price: '97.99', stock: 4, image: FB },
+        { color: 'Black', size: 'L',    price: '99.99', stock: 3, image: FB },
+      ],
     },
   ],
 };

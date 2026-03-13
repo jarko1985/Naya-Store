@@ -50,6 +50,22 @@ export const signUpFormSchema = z
     qty: z.number().int().nonnegative('Quantity must be a positive number'),
     image: z.string().min(1, 'Image is required'),
     price: currency,
+    variantId: z.string().optional(),
+    color: z.string().optional(),
+    size: z.string().optional(),
+  });
+
+  export const insertProductVariantSchema = z.object({
+    productId: z.string().min(1, 'Product is required'),
+    color: z.string().min(1, 'Color is required'),
+    size: z.string().min(1, 'Size is required'),
+    price: currency,
+    stock: z.coerce.number().min(0, 'Stock must be 0 or more'),
+    image: z.string().min(1, 'Image is required'),
+  });
+
+  export const updateProductVariantSchema = insertProductVariantSchema.extend({
+    id: z.string().min(1, 'Id is required'),
   });
 
   export const insertCartSchema = z.object({
@@ -103,6 +119,9 @@ export const signUpFormSchema = z
     name: z.string(),
     price: currency,
     qty: z.number(),
+    variantId: z.string().optional().nullable(),
+    color: z.string().optional().nullable(),
+    size: z.string().optional().nullable(),
   });
   
   // Schema for the PayPal paymentResult

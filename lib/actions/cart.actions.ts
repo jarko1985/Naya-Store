@@ -47,7 +47,14 @@ export async function addItemToCart(data: CartItem) {
     const sessionCartId = await getOrCreateSessionCartId();
 
     const session = await auth();
-    const userId = session?.user?.id ? (session.user.id as string) : undefined;
+    const rawUserId = session?.user?.id ? (session.user.id as string) : undefined;
+
+    // Verify the user actually exists in the DB (guards against stale sessions after a re-seed)
+    let userId: string | undefined = undefined;
+    if (rawUserId) {
+      const userExists = await prisma.user.findFirst({ where: { id: rawUserId }, select: { id: true } });
+      if (userExists) userId = rawUserId;
+    }
 
     const cart = await getMyCart();
 
@@ -57,6 +64,17 @@ export async function addItemToCart(data: CartItem) {
       where: { id: item.productId },
     });
     if (!product) throw new Error('Product not found');
+
+    // Determine available stock (variant or product level)
+    let availableStock = product.stock;
+    if (item.variantId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const variant = await (prisma as any).productVariant.findFirst({
+        where: { id: item.variantId },
+      });
+      if (!variant) throw new Error('Variant not found');
+      availableStock = variant.stock;
+    }
 
     if (!cart) {
       const newCart = insertCartSchema.parse({
@@ -78,19 +96,19 @@ export async function addItemToCart(data: CartItem) {
       };
     } else {
       const existItem = (cart.items as CartItem[]).find(
-        (x) => x.productId === item.productId
+        (x) => x.productId === item.productId && x.variantId === item.variantId
       );
 
       if (existItem) {
-        if (product.stock < existItem.qty + 1) {
+        if (availableStock < existItem.qty + 1) {
           throw new Error('Not enough stock');
         }
 
         (cart.items as CartItem[]).find(
-          (x) => x.productId === item.productId
+          (x) => x.productId === item.productId && x.variantId === item.variantId
         )!.qty = existItem.qty + 1;
       } else {
-        if (product.stock < 1) throw new Error('Not enough stock');
+        if (availableStock < 1) throw new Error('Not enough stock');
         cart.items.push(item);
       }
 
@@ -124,7 +142,14 @@ export async function getMyCart() {
   if (!sessionCartId) return undefined;
 
   const session = await auth();
-  const userId = session?.user?.id ? (session.user.id as string) : undefined;
+  const rawUserId = session?.user?.id ? (session.user.id as string) : undefined;
+
+  // Verify user exists to guard against stale sessions
+  let userId: string | undefined = undefined;
+  if (rawUserId) {
+    const userExists = await prisma.user.findFirst({ where: { id: rawUserId }, select: { id: true } });
+    if (userExists) userId = rawUserId;
+  }
 
   let cart = await prisma.cart.findFirst({
     where: userId ? { userId } : { sessionCartId },
@@ -158,7 +183,7 @@ export async function getMyCart() {
   });
 }
 
-export async function removeItemFromCart(productId: string) {
+export async function removeItemFromCart(productId: string, variantId?: string) {
   try {
     const sessionCartId = (await cookies()).get('sessionCartId')?.value;
     if (!sessionCartId) throw new Error('Cart session not found');
@@ -172,17 +197,18 @@ export async function removeItemFromCart(productId: string) {
     if (!cart) throw new Error('Cart not found');
 
     const exist = (cart.items as CartItem[]).find(
-      (x) => x.productId === productId
+      (x) => x.productId === productId && x.variantId === variantId
     );
     if (!exist) throw new Error('Item not found');
 
     if (exist.qty === 1) {
       cart.items = (cart.items as CartItem[]).filter(
-        (x) => x.productId !== exist.productId
+        (x) => !(x.productId === exist.productId && x.variantId === exist.variantId)
       );
     } else {
-      (cart.items as CartItem[]).find((x) => x.productId === productId)!.qty =
-        exist.qty - 1;
+      (cart.items as CartItem[]).find(
+        (x) => x.productId === productId && x.variantId === variantId
+      )!.qty = exist.qty - 1;
     }
 
     await prisma.cart.update({

@@ -35,7 +35,7 @@ const AddToCart = ({ cart, item }: { cart?: Cart; item: CartItem }) => {
     // Handle remove from cart
     const handleRemoveFromCart = async () => {
       startTransition(async () => {
-        const res = await removeItemFromCart(item.productId);
+        const res = await removeItemFromCart(item.productId, item.variantId);
   
         if (res.success) {
           toast.success(res.message);
@@ -47,7 +47,7 @@ const AddToCart = ({ cart, item }: { cart?: Cart; item: CartItem }) => {
   
     // Check if item is in cart
     const existItem =
-      cart && cart.items.find((x) => x.productId === item.productId);
+      cart && cart.items.find((x) => x.productId === item.productId && x.variantId === item.variantId);
   
     return existItem ? (
       <div>

@@ -1,28 +1,30 @@
 import { auth } from '@/auth';
-import AddToCart from '@/components/shared/product/add-to-cart';
 import ProductImages from '@/components/shared/product/product-images';
 import ProductPrice from '@/components/shared/product/product-price';
 import Rating from '@/components/shared/product/rating';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { getMyCart,removeItemFromCart } from '@/lib/actions/cart.actions';
+import VariantSelector from '@/components/shared/product/variant-selector';
+import { getMyCart } from '@/lib/actions/cart.actions';
 import { getProductBySlug } from "@/lib/actions/product.action";
+import { ProductVariant } from '@/types';
 import { notFound } from "next/navigation";
 import ReviewList from './review-list';
 
 
 
-const ProductDetailsPage =async(props: {
+const ProductDetailsPage = async (props: {
     params: Promise<{ slug: string }>;
-  })=>{
+  }) => {
     const { slug } = await props.params;
     const product = await getProductBySlug(slug);
     if (!product) notFound();
     const session = await auth();
     const userId = session?.user?.id;
     const cart = await getMyCart();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const variants: ProductVariant[] = ((product as any).variants as ProductVariant[]) ?? [];
+
   return (
-  
+
     <>
       <section>
         <div className='grid grid-cols-1 md:grid-cols-5'>
@@ -44,6 +46,9 @@ const ProductDetailsPage =async(props: {
                   value={Number(product.price)}
                   className='w-24 rounded-full bg-green-100 text-green-700 px-5 py-2'
                 />
+                {variants.length > 0 && (
+                  <span className='text-sm text-muted-foreground'>starting from</span>
+                )}
               </div>
             </div>
             <div className='mt-10'>
@@ -53,39 +58,18 @@ const ProductDetailsPage =async(props: {
           </div>
           {/* Action Column */}
           <div>
-            <Card>
-              <CardContent className='p-4'>
-                <div className='mb-2 flex justify-between'>
-                  <div>Price</div>
-                  <div>
-                    <ProductPrice value={Number(product.price)} />
-                  </div>
-                </div>
-                <div className='mb-2 flex justify-between'>
-                  <div>Status</div>
-                  {product.stock > 0 ? (
-                    <Badge variant='outline'>In Stock</Badge>
-                  ) : (
-                    <Badge variant='destructive'>Out Of Stock</Badge>
-                  )}
-                </div>
-                {product.stock > 0 && (
-                  <div className='flex-center'>
-                    <AddToCart
-                      cart={cart}
-                      item={{
-                        productId: product.id,
-                        name: product.name,
-                        slug: product.slug,
-                        price: product.price,
-                        qty: 1,
-                        image: product.images![0],
-                      }}
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <VariantSelector
+              product={{
+                id: product.id,
+                name: product.name,
+                slug: product.slug,
+                price: product.price,
+                stock: product.stock,
+                images: product.images,
+              }}
+              variants={variants}
+              cart={cart}
+            />
           </div>
         </div>
       </section>
