@@ -184,6 +184,16 @@ export async function getProductBySlug(slug: string) {
       orderBy: { createdAt: 'desc' },
       take: 4,
     });
-  
+
+    return convertToPlainObject(data);
+  }
+
+  // Get top rated products
+  export async function getTopRatedProducts() {
+    const data = await prisma.product.findMany({
+      orderBy: [{ rating: 'desc' }, { numReviews: 'desc' }],
+      take: LATEST_PRODUCTS_LIMIT,
+    });
+
     return convertToPlainObject(data);
   }

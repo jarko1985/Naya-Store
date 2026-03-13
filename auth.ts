@@ -19,7 +19,7 @@ const customAdapter = {
     return prisma.user.create({
       data: {
         ...data,
-        email: data.email ?? `oauth_${randomUUID()}@noreply.naya.store`,
+        email: data.email ?? randomUUID(),
         name: data.name ?? undefined,
       },
     });
