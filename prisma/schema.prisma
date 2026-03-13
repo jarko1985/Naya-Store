@@ -140,4 +140,11 @@ model Review {
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model CategoryMeta {
+  name  String @id
+  image String
+
+  @@map("category_meta")
+}
+
 

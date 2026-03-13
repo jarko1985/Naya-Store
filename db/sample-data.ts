@@ -18,11 +18,6 @@ const sampleData = {
     },
   ],
   products: [
-    // ─────────────────────────────────────────
-    // MEN'S CLOTHING
-    // ─────────────────────────────────────────
-
-    // Men's Dress Shirts (original products kept)
     {
       name: 'Polo Sporting Stretch Shirt',
       slug: 'polo-sporting-stretch-shirt',

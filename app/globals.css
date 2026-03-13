@@ -89,7 +89,7 @@
 
 @utility animate-gradient-flow {
   background-size: 300% 300%;
-  animation: gradient-flow 12s ease infinite;
+  animation: gradient-flow 6s ease infinite;
 }
 
 :root {
