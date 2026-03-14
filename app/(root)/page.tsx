@@ -29,7 +29,7 @@ export default async function Home() {
       <ProductList data={topRatedProducts} title='Top Rated' limit={4} />
       <ViewAllProductsButton />
       <DealCountdown />
-      <IconBoxes />
+      {/* <IconBoxes /> */}
     </>
   );
 }

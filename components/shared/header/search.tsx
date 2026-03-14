@@ -15,7 +15,7 @@ const Search = async () => {
 
   return (
     <form action='/search' method='GET'>
-      <div className='flex w-full max-w-sm items-center space-x-2'>
+      <div className='flex w-full max-w-xl items-center space-x-2'>
         <Select name='category'>
           <SelectTrigger className='w-[180px]'>
             <SelectValue placeholder='All' />
