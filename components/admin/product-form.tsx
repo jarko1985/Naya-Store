@@ -34,7 +34,7 @@ import {
 import { Switch } from '../ui/switch';
 import { Badge } from '../ui/badge';
 import { useState } from 'react';
-import { Trash2, Plus, Wand2, ImagePlus, X, Tag, Package, DollarSign, Star, FileText, Layers } from 'lucide-react';
+import { Trash2, Plus, Wand2, ImagePlus, X, Tag, DollarSign, Star, FileText, Layers } from 'lucide-react';
 
 const colorMap: Record<string, string> = {
   Black: '#000000', White: '#FFFFFF', Red: '#EF4444', Green: '#22C55E',
@@ -198,7 +198,7 @@ const ProductForm = ({
                       <div className='space-y-2'>
                         {!showCustomCategory ? (
                           <Select
-                            
+
                             value={field.value}
                             onValueChange={(val) => {
                               if (val === '__custom__') {
@@ -262,6 +262,73 @@ const ProductForm = ({
                     <FormLabel>Brand</FormLabel>
                     <FormControl>
                       <Input placeholder='e.g. Nike' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Base Color + Base Size */}
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+              <FormField
+                control={form.control}
+                name='color'
+                render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'color'> }) => (
+                  <FormItem>
+                    <FormLabel>Base Color</FormLabel>
+                    <FormControl>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select base color'>
+                            {field.value && (
+                              <div className='flex items-center gap-2'>
+                                <span
+                                  className='w-3.5 h-3.5 rounded-full border border-border shrink-0'
+                                  style={{ backgroundColor: colorMap[field.value] ?? '#ccc' }}
+                                />
+                                {field.value}
+                              </div>
+                            )}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PRODUCT_COLORS.map((c) => (
+                            <SelectItem key={c} value={c}>
+                              <div className='flex items-center gap-2'>
+                                <span
+                                  className='w-3 h-3 rounded-full border border-border shrink-0'
+                                  style={{ backgroundColor: colorMap[c] ?? '#ccc' }}
+                                />
+                                {c}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='size'
+                render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'size'> }) => (
+                  <FormItem>
+                    <FormLabel>Base Size</FormLabel>
+                    <FormControl>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select base size' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PRODUCT_SIZES.map((s) => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

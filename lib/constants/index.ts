@@ -43,6 +43,8 @@ export const productDefaultValues = {
   stock: 0,
   rating: '0',
   numReviews: '0',
+  color: 'Black',
+  size: 'M',
   isFeatured: false,
   banner: null,
 };
