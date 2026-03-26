@@ -4,6 +4,7 @@ import {
   getAllProducts,
   getAllCategories,
 } from '@/lib/actions/product.action';
+import { getMyCart } from '@/lib/actions/cart.actions';
 import Link from 'next/link';
 
 const prices = [
@@ -113,16 +114,18 @@ const SearchPage = async (props: {
     return `/search?${new URLSearchParams(params).toString()}`;
   };
 
-  const products = await getAllProducts({
-    query: q,
-    category,
-    price,
-    rating,
-    sort,
-    page: Number(page),
-  });
-
-  const categories = await getAllCategories();
+  const [products, categories, cart] = await Promise.all([
+    getAllProducts({
+      query: q,
+      category,
+      price,
+      rating,
+      sort,
+      page: Number(page),
+    }),
+    getAllCategories(),
+    getMyCart(),
+  ]);
 
   return (
     <div className='grid md:grid-cols-5 md:gap-5'>
@@ -235,7 +238,7 @@ const SearchPage = async (props: {
         <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
           {products.data.length === 0 && <div>No products found</div>}
           {products.data.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} cart={cart} />
           ))}
         </div>
       </div>

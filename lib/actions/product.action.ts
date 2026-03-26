@@ -3,6 +3,7 @@ import { LATEST_PRODUCTS_LIMIT, PAGE_SIZE } from "@/lib/constants";
 import { prisma } from "@/db/prisma";
 import { convertToPlainObject, formatError } from "@/lib/utils";
 import { Prisma } from "@prisma/client";
+import { Product } from "@/types";
 import { revalidatePath } from "next/cache";
 import { insertProductSchema, updateProductSchema, insertProductVariantSchema, updateProductVariantSchema } from "../validators";
 import z from "zod";
@@ -11,9 +12,10 @@ export async function getLatestProducts () {
         orderBy: {
             createdAt: 'desc'
         },
-        take: LATEST_PRODUCTS_LIMIT
+        take: LATEST_PRODUCTS_LIMIT,
+        include: { variants: { orderBy: [{ color: 'asc' }, { size: 'asc' }] } },
     });
-    return convertToPlainObject(data);
+    return convertToPlainObject(data) as unknown as Product[];
 }
 export async function getProductBySlug(slug: string) {
     const data = await prisma.product.findFirst({
@@ -99,12 +101,13 @@ export async function getProductBySlug(slug: string) {
           : { createdAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit,
+      include: { variants: { orderBy: [{ color: 'asc' }, { size: 'asc' }] } },
     });
   
     const dataCount = await prisma.product.count();
   
     return {
-      data,
+      data: convertToPlainObject(data) as unknown as Product[],
       totalPages: Math.ceil(dataCount / limit),
     };
   }
@@ -187,9 +190,10 @@ export async function getProductBySlug(slug: string) {
       where: { isFeatured: true },
       orderBy: { createdAt: 'desc' },
       take: 4,
+      include: { variants: { orderBy: [{ color: 'asc' }, { size: 'asc' }] } },
     });
 
-    return convertToPlainObject(data);
+    return convertToPlainObject(data) as unknown as Product[];
   }
 
   // Get top rated products
@@ -197,9 +201,10 @@ export async function getProductBySlug(slug: string) {
     const data = await prisma.product.findMany({
       orderBy: [{ rating: 'desc' }, { numReviews: 'desc' }],
       take: LATEST_PRODUCTS_LIMIT,
+      include: { variants: { orderBy: [{ color: 'asc' }, { size: 'asc' }] } },
     });
 
-    return convertToPlainObject(data);
+    return convertToPlainObject(data) as unknown as Product[];
   }
 
   // Create a product variant
