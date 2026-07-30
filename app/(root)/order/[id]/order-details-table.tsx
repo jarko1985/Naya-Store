@@ -28,6 +28,7 @@ import {
   deliverOrder,
 } from '@/lib/actions/order.actions';
 import StripePayment from './stripe-payment';
+import OrderConfirmationBanner from '@/components/shared/order/order-confirmation-banner';
 
 const OrderDetailsTable = ({
   order,
@@ -47,6 +48,8 @@ const OrderDetailsTable = ({
     itemsPrice,
     shippingPrice,
     taxPrice,
+    discountAmount,
+    couponCode,
     totalPrice,
     paymentMethod,
     isDelivered,
@@ -127,6 +130,7 @@ const OrderDetailsTable = ({
 
   return (
     <>
+      <OrderConfirmationBanner />
       <h1 className='py-4 text-2xl'>Order {formatId(id)}</h1>
       <div className='grid md:grid-cols-3 md:gap-5'>
         <div className='col-span-2 space-4-y overlow-x-auto'>
@@ -215,6 +219,12 @@ const OrderDetailsTable = ({
                 <div>Items</div>
                 <div>{formatCurrency(itemsPrice)}</div>
               </div>
+              {Number(discountAmount) > 0 && (
+                <div className='flex justify-between text-green-600'>
+                  <div>Discount{couponCode ? ` (${couponCode})` : ''}</div>
+                  <div>-{formatCurrency(discountAmount)}</div>
+                </div>
+              )}
               <div className='flex justify-between'>
                 <div>Tax</div>
                 <div>{formatCurrency(taxPrice)}</div>
@@ -223,7 +233,7 @@ const OrderDetailsTable = ({
                 <div>Shipping</div>
                 <div>{formatCurrency(shippingPrice)}</div>
               </div>
-              <div className='flex justify-between'>
+              <div className='flex justify-between font-bold'>
                 <div>Total</div>
                 <div>{formatCurrency(totalPrice)}</div>
               </div>

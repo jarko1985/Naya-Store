@@ -1,10 +1,13 @@
 import { auth } from '@/auth';
 import ProductDetailsClient from '@/components/shared/product/product-details-client';
 import { getMyCart } from '@/lib/actions/cart.actions';
-import { getProductBySlug } from '@/lib/actions/product.action';
-import { Product, ProductVariant } from '@/types';
+import { getProductBySlug, getRelatedProducts } from '@/lib/actions/product.action';
+import { isProductWishlisted } from '@/lib/actions/wishlist.actions';
+import { recordProductView, getRecentlyViewed } from '@/lib/actions/recently-viewed.actions';
+import { Product, ProductVariant, RecentlyViewedItem } from '@/types';
 import { notFound } from 'next/navigation';
 import ReviewList from './review-list';
+import ProductList from '@/components/shared/product/product-list';
 
 const ProductDetailsPage = async (props: {
   params: Promise<{ slug: string }>;
@@ -16,6 +19,14 @@ const ProductDetailsPage = async (props: {
   const session = await auth();
   const userId = session?.user?.id;
   const cart = await getMyCart();
+  const initialWishlisted = await isProductWishlisted({ productId: product.id });
+
+  await recordProductView(product.id);
+
+  const [relatedProducts, recentlyViewed] = await Promise.all([
+    getRelatedProducts({ productId: product.id, category: product.category }),
+    getRecentlyViewed(product.id) as Promise<RecentlyViewedItem[]>,
+  ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const variants: ProductVariant[] = ((product as any).variants as ProductVariant[]) ?? [];
@@ -28,6 +39,7 @@ const ProductDetailsPage = async (props: {
         variants={variants}
         cart={cart}
         userId={userId}
+        initialWishlisted={initialWishlisted}
       />
 
       {/* Customer Reviews */}
@@ -37,8 +49,21 @@ const ProductDetailsPage = async (props: {
           userId={userId || ''}
           productId={product.id}
           productSlug={product.slug}
+          averageRating={Number(product.rating)}
+          numReviews={product.numReviews}
         />
       </section>
+
+      {relatedProducts.length > 0 && (
+        <ProductList data={relatedProducts as Product[]} title='Related Products' />
+      )}
+
+      {recentlyViewed.length > 0 && (
+        <ProductList
+          data={recentlyViewed.map((item) => item.product)}
+          title='Recently Viewed'
+        />
+      )}
     </div>
   );
 };

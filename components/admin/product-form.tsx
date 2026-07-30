@@ -47,11 +47,12 @@ interface PendingVariant {
   color: string;
   size: string;
   price: string;
+  compareAtPrice: string;
   stock: string;
   image: string;
 }
 
-const emptyVariantForm: PendingVariant = { color: '', size: '', price: '', stock: '', image: '' };
+const emptyVariantForm: PendingVariant = { color: '', size: '', price: '', compareAtPrice: '', stock: '', image: '' };
 
 const ProductForm = ({
   type,
@@ -90,6 +91,7 @@ const ProductForm = ({
             color: v.color,
             size: v.size,
             price: v.price,
+            compareAtPrice: v.compareAtPrice || undefined,
             stock: Number(v.stock),
             image: v.image,
           });
@@ -356,6 +358,22 @@ const ProductForm = ({
                     <FormLabel>Base Price ($)</FormLabel>
                     <FormControl>
                       <Input placeholder='0.00' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='compareAtPrice'
+                render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'compareAtPrice'> }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Compare-at Price ($)
+                      <span className='ml-1.5 text-xs text-muted-foreground font-normal'>(optional, shows a sale badge)</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder='e.g. 49.99' {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -673,6 +691,14 @@ const ProductForm = ({
                       placeholder='e.g. 29.99'
                       value={variantForm.price}
                       onChange={(e) => setVariantForm((f) => ({ ...f, price: e.target.value }))}
+                    />
+                  </div>
+                  <div className='space-y-1.5'>
+                    <label className='text-xs font-medium text-muted-foreground uppercase tracking-wide'>Compare-at Price ($)</label>
+                    <Input
+                      placeholder='optional'
+                      value={variantForm.compareAtPrice}
+                      onChange={(e) => setVariantForm((f) => ({ ...f, compareAtPrice: e.target.value }))}
                     />
                   </div>
                   <div className='space-y-1.5'>

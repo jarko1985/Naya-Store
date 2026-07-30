@@ -123,7 +123,7 @@ const CategoryGrid = async () => {
             <Link
               key={category}
               href={`/search?category=${encodeURIComponent(category)}`}
-              className='group relative flex flex-col overflow-hidden rounded-xl border border-white/5 hover:scale-[1.04] hover:shadow-xl transition-all duration-200 cursor-pointer aspect-[3/4]'
+              className='group relative flex flex-col overflow-hidden rounded-xl border shadow-sm hover:scale-[1.04] hover:shadow-xl transition-all duration-200 cursor-pointer aspect-[3/4]'
             >
               <Image
                 src={image}
@@ -149,7 +149,7 @@ const CategoryGrid = async () => {
             <Link
               key={category}
               href={`/search?category=${encodeURIComponent(category)}`}
-              className={`group flex flex-col items-center gap-3 p-5 rounded-xl border border-white/5 bg-gradient-to-br ${gradient} hover:scale-[1.04] hover:shadow-xl hover:border-white/10 transition-all duration-200 cursor-pointer`}
+              className={`group flex flex-col items-center gap-3 p-5 rounded-xl border shadow-sm bg-gradient-to-br ${gradient} hover:scale-[1.04] hover:shadow-xl transition-all duration-200 cursor-pointer`}
             >
               <div className='p-3 rounded-full bg-background/40 backdrop-blur-sm group-hover:bg-background/60 transition-colors'>
                 <Icon className={`w-5 h-5 ${iconColor}`} />

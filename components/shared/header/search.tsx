@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -9,6 +8,7 @@ import {
 } from '@/components/ui/select';
 import { getAllCategories } from '@/lib/actions/product.action';
 import { SearchIcon } from 'lucide-react';
+import SearchSuggestionsInput from '@/components/shared/search/search-suggestions-input';
 
 const Search = async () => {
   const categories = await getAllCategories();
@@ -31,12 +31,7 @@ const Search = async () => {
             ))}
           </SelectContent>
         </Select>
-        <Input
-          name='q'
-          type='text'
-          placeholder='Search...'
-          className='md:w-[100px] lg:w-[300px]'
-        />
+        <SearchSuggestionsInput />
         <Button>
           <SearchIcon />
         </Button>

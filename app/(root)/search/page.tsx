@@ -1,10 +1,14 @@
 import ProductCard from '@/components/shared/product/product-card';
-import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/shared/empty-state';
+import SortChips from '@/components/shared/search/sort-chips';
+import ResultSummary from '@/components/shared/search/result-summary';
+import FiltersDrawer from '@/components/shared/search/filters-drawer';
 import {
   getAllProducts,
   getAllCategories,
 } from '@/lib/actions/product.action';
 import Link from 'next/link';
+import { SearchX } from 'lucide-react';
 
 const prices = [
   {
@@ -57,7 +61,7 @@ export async function generateMetadata(props: {
   if (isQuerySet || isCategorySet || isPriceSet || isRatingSet) {
     return {
       title: `
-      Search ${isQuerySet ? q : ''} 
+      Search ${isQuerySet ? q : ''}
       ${isCategorySet ? `: Category ${category}` : ''}
       ${isPriceSet ? `: Price ${price}` : ''}
       ${isRatingSet ? `: Rating ${rating}` : ''}`,
@@ -124,120 +128,138 @@ const SearchPage = async (props: {
 
   const categories = await getAllCategories();
 
+  const hasAnyFilter =
+    (q !== 'all' && q !== '') ||
+    (category !== 'all' && category !== '') ||
+    rating !== 'all' ||
+    price !== 'all';
+
+  const activeFilters = [
+    ...(category !== 'all' && category !== ''
+      ? [{ label: `Category: ${category}`, clearHref: getFilterUrl({ c: 'all' }) }]
+      : []),
+    ...(price !== 'all'
+      ? [{ label: `Price: ${prices.find((p) => p.value === price)?.name ?? price}`, clearHref: getFilterUrl({ p: 'all' }) }]
+      : []),
+    ...(rating !== 'all'
+      ? [{ label: `${rating} stars & up`, clearHref: getFilterUrl({ r: 'all' }) }]
+      : []),
+  ];
+
+  const filterContent = (
+    <>
+      {/* Category Links */}
+      <div className='text-xl mb-2 mt-3'>Department</div>
+      <div>
+        <ul className='space-y-1'>
+          <li>
+            <Link
+              className={`${
+                (category === 'all' || category === '') && 'font-bold'
+              }`}
+              href={getFilterUrl({ c: 'all' })}
+            >
+              Any
+            </Link>
+          </li>
+          {categories.map((x) => (
+            <li key={x.category}>
+              <Link
+                className={`${category === x.category && 'font-bold'}`}
+                href={getFilterUrl({ c: x.category })}
+              >
+                {x.category}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {/* Price Links */}
+      <div className='text-xl mb-2 mt-8'>Price</div>
+      <div>
+        <ul className='space-y-1'>
+          <li>
+            <Link
+              className={`${price === 'all' && 'font-bold'}`}
+              href={getFilterUrl({ p: 'all' })}
+            >
+              Any
+            </Link>
+          </li>
+          {prices.map((p) => (
+            <li key={p.value}>
+              <Link
+                className={`${price === p.value && 'font-bold'}`}
+                href={getFilterUrl({ p: p.value })}
+              >
+                {p.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {/* Rating Links */}
+      <div className='text-xl mb-2 mt-8'>Customer Ratings</div>
+      <div>
+        <ul className='space-y-1'>
+          <li>
+            <Link
+              className={`${rating === 'all' && 'font-bold'}`}
+              href={getFilterUrl({ r: 'all' })}
+            >
+              Any
+            </Link>
+          </li>
+          {ratings.map((r) => (
+            <li key={r}>
+              <Link
+                className={`${rating === r.toString() && 'font-bold'}`}
+                href={getFilterUrl({ r: `${r}` })}
+              >
+                {`${r} stars & up`}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
+  );
+
   return (
     <div className='grid md:grid-cols-5 md:gap-5'>
-      <div className='filter-links'>
-        {/* Category Links */}
-        <div className='text-xl mb-2 mt-3'>Department</div>
-        <div>
-          <ul className='space-y-1'>
-            <li>
-              <Link
-                className={`${
-                  (category === 'all' || category === '') && 'font-bold'
-                }`}
-                href={getFilterUrl({ c: 'all' })}
-              >
-                Any
-              </Link>
-            </li>
-            {categories.map((x) => (
-              <li key={x.category}>
-                <Link
-                  className={`${category === x.category && 'font-bold'}`}
-                  href={getFilterUrl({ c: x.category })}
-                >
-                  {x.category}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-        {/* Price Links */}
-        <div className='text-xl mb-2 mt-8'>Price</div>
-        <div>
-          <ul className='space-y-1'>
-            <li>
-              <Link
-                className={`${price === 'all' && 'font-bold'}`}
-                href={getFilterUrl({ p: 'all' })}
-              >
-                Any
-              </Link>
-            </li>
-            {prices.map((p) => (
-              <li key={p.value}>
-                <Link
-                  className={`${price === p.value && 'font-bold'}`}
-                  href={getFilterUrl({ p: p.value })}
-                >
-                  {p.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-        {/* Rating Links */}
-        <div className='text-xl mb-2 mt-8'>Customer Ratings</div>
-        <div>
-          <ul className='space-y-1'>
-            <li>
-              <Link
-                className={`${rating === 'all' && 'font-bold'}`}
-                href={getFilterUrl({ r: 'all' })}
-              >
-                Any
-              </Link>
-            </li>
-            {ratings.map((r) => (
-              <li key={r}>
-                <Link
-                  className={`${rating === r.toString() && 'font-bold'}`}
-                  href={getFilterUrl({ r: `${r}` })}
-                >
-                  {`${r} stars & up`}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      <div className='hidden md:block filter-links rounded-xl border bg-card shadow-sm p-4 h-fit'>{filterContent}</div>
       <div className='md:col-span-4 space-y-4'>
-        <div className='flex-between flex-col md:flex-row my-4'>
-          <div className='flex items-center'>
-            {q !== 'all' && q !== '' && 'Query: ' + q}
-            {category !== 'all' && category !== '' && 'Category: ' + category}
-            {price !== 'all' && ' Price: ' + price}
-            {rating !== 'all' && ' Rating: ' + rating + ' stars & up'}
-            &nbsp;
-            {(q !== 'all' && q !== '') ||
-            (category !== 'all' && category !== '') ||
-            rating !== 'all' ||
-            price !== 'all' ? (
-              <Button variant={'link'} asChild>
-                <Link href='/search'>Clear</Link>
-              </Button>
-            ) : null}
+        <div className='flex-between flex-col md:flex-row gap-3 my-4'>
+          <div className='flex items-center gap-3 w-full md:w-auto'>
+            <FiltersDrawer>{filterContent}</FiltersDrawer>
+            <ResultSummary
+              resultCount={products.data.length}
+              query={q}
+              activeFilters={activeFilters}
+              clearAllHref='/search'
+            />
           </div>
-          <div>
-            Sort by{' '}
-            {sortOrders.map((s) => (
-              <Link
-                key={s}
-                className={`mx-2 ${sort == s && 'font-bold'}`}
-                href={getFilterUrl({ s })}
-              >
-                {s}
-              </Link>
+          <SortChips
+            sortOrders={sortOrders}
+            currentSort={sort}
+            getHref={(s) => getFilterUrl({ s })}
+          />
+        </div>
+        {products.data.length === 0 ? (
+          <EmptyState
+            icon={SearchX}
+            title='No products found'
+            description="Try adjusting your search or filters to find what you're looking for."
+            actionLabel={hasAnyFilter ? 'Clear filters' : undefined}
+            actionHref={hasAnyFilter ? '/search' : undefined}
+          />
+        ) : (
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+            {products.data.map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
-        </div>
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-          {products.data.length === 0 && <div>No products found</div>}
-          {products.data.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        )}
       </div>
     </div>
   );

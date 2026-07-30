@@ -131,7 +131,9 @@ export async function getProductBySlug(slug: string) {
   export async function createProduct(data: z.infer<typeof insertProductSchema>) {
     try {
       const product = insertProductSchema.parse(data);
-      const created = await prisma.product.create({ data: product });
+      const created = await prisma.product.create({
+        data: { ...product, compareAtPrice: product.compareAtPrice || null },
+      });
 
       revalidatePath('/admin/products');
 
@@ -144,7 +146,7 @@ export async function getProductBySlug(slug: string) {
       return { success: false, message: formatError(error), id: undefined };
     }
   }
-  
+
   // Update a product
   export async function updateProduct(data: z.infer<typeof updateProductSchema>) {
     try {
@@ -152,16 +154,16 @@ export async function getProductBySlug(slug: string) {
       const productExists = await prisma.product.findFirst({
         where: { id: product.id },
       });
-  
+
       if (!productExists) throw new Error('Product not found');
-  
+
       await prisma.product.update({
         where: { id: product.id },
-        data: product,
+        data: { ...product, compareAtPrice: product.compareAtPrice || null },
       });
-  
+
       revalidatePath('/admin/products');
-  
+
       return {
         success: true,
         message: 'Product updated successfully',
@@ -192,6 +194,20 @@ export async function getProductBySlug(slug: string) {
     return convertToPlainObject(data);
   }
 
+  // Get products currently marked down (compareAtPrice > price)
+  export async function getOnSaleProducts(limit = 8) {
+    const candidates = await prisma.product.findMany({
+      where: { compareAtPrice: { not: null } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const onSale = candidates.filter(
+      (p) => p.compareAtPrice !== null && Number(p.compareAtPrice) > Number(p.price)
+    );
+
+    return convertToPlainObject(onSale.slice(0, limit));
+  }
+
   // Get top rated products
   export async function getTopRatedProducts() {
     const data = await prisma.product.findMany({
@@ -206,7 +222,9 @@ export async function getProductBySlug(slug: string) {
   export async function createProductVariant(data: z.infer<typeof insertProductVariantSchema>) {
     try {
       const variant = insertProductVariantSchema.parse(data);
-      await prisma.productVariant.create({ data: variant });
+      await prisma.productVariant.create({
+        data: { ...variant, compareAtPrice: variant.compareAtPrice || null },
+      });
       revalidatePath('/admin/products');
       return { success: true, message: 'Variant created successfully' };
     } catch (error) {
@@ -224,6 +242,7 @@ export async function getProductBySlug(slug: string) {
           color: variant.color,
           size: variant.size,
           price: variant.price,
+          compareAtPrice: variant.compareAtPrice || null,
           stock: variant.stock,
           image: variant.image,
         },
@@ -244,4 +263,85 @@ export async function getProductBySlug(slug: string) {
     } catch (error) {
       return { success: false, message: formatError(error) };
     }
+  }
+
+  // Get products related to a given product (same category, best rated first)
+  export async function getRelatedProducts({
+    productId,
+    category,
+    limit = 4,
+  }: {
+    productId: string;
+    category: string;
+    limit?: number;
+  }) {
+    const data = await prisma.product.findMany({
+      where: {
+        category,
+        id: { not: productId },
+      },
+      orderBy: [{ rating: 'desc' }, { numReviews: 'desc' }],
+      take: limit,
+    });
+
+    return convertToPlainObject(data);
+  }
+
+  // Lightweight product name matches for search autocomplete
+  export async function getProductSuggestions(query: string, limit = 5) {
+    if (!query || query.trim().length < 2) return [];
+
+    const data = await prisma.product.findMany({
+      where: {
+        name: { contains: query.trim(), mode: 'insensitive' },
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        images: true,
+        price: true,
+        category: true,
+      },
+      orderBy: { numReviews: 'desc' },
+      take: limit,
+    });
+
+    return convertToPlainObject(data);
+  }
+
+  // Upsell suggestions for the cart page — same categories as items already in cart, excluding those items
+  export async function getCartUpsells({
+    categories,
+    excludeIds,
+    limit = 4,
+  }: {
+    categories: string[];
+    excludeIds: string[];
+    limit?: number;
+  }) {
+    if (categories.length === 0) return [];
+
+    const data = await prisma.product.findMany({
+      where: {
+        category: { in: categories },
+        id: { notIn: excludeIds },
+      },
+      orderBy: [{ rating: 'desc' }, { numReviews: 'desc' }],
+      take: limit,
+    });
+
+    return convertToPlainObject(data);
+  }
+
+  // Fetch multiple products by id, preserving no particular order (used by compare page)
+  export async function getProductsByIds(ids: string[]) {
+    if (!ids || ids.length === 0) return [];
+
+    const data = await prisma.product.findMany({
+      where: { id: { in: ids } },
+      include: { variants: { orderBy: [{ color: 'asc' }, { size: 'asc' }] } },
+    });
+
+    return convertToPlainObject(data);
   }

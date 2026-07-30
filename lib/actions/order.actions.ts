@@ -3,8 +3,10 @@
 import { convertToPlainObject, formatError } from '../utils';
 import { auth } from '@/auth';
 import { getMyCart } from './cart.actions';
+import { calcPrice } from '../cart-pricing';
 import { getUserById } from './user.actions';
 import { insertOrderSchema } from '../validators';
+import { resolveCouponDiscount } from './coupon.actions';
 import { prisma } from '@/db/prisma';
 import { PAGE_SIZE } from '../constants';
 import { CartItem, PaymentResult, ShippingAddress } from '@/types';
@@ -48,22 +50,65 @@ export async function createOrder() {
           redirectTo: '/payment-method',
         };
       }
-  
+
+      // Re-validate any coupon applied to the cart — it may have expired, been
+      // deactivated, or hit its usage limit since it was applied
+      let validatedCoupon: Awaited<ReturnType<typeof resolveCouponDiscount>> | null = null;
+      if (cart.couponCode) {
+        validatedCoupon = await resolveCouponDiscount(cart.couponCode, Number(cart.itemsPrice));
+
+        if (!validatedCoupon.valid) {
+          // Clear the stale coupon from the cart so the user isn't stuck retrying it
+          await prisma.cart.update({
+            where: { id: cart.id },
+            data: { couponCode: null, discountAmount: 0, totalPrice: Number(cart.itemsPrice) + Number(cart.taxPrice) + Number(cart.shippingPrice) },
+          });
+
+          return {
+            success: false,
+            message: validatedCoupon.message + ' — it has been removed from your cart',
+            redirectTo: '/cart',
+          };
+        }
+      }
+
+      const discountAmount = validatedCoupon?.valid ? validatedCoupon.discountAmount : 0;
+
+      // Recompute pricing fresh from the cart's items so itemsPrice/shippingPrice/
+      // taxPrice/totalPrice are always internally consistent with the just-revalidated
+      // discount (cart.totalPrice may be stale if it was computed before this re-check)
+      const freshPricing = calcPrice(cart.items, discountAmount);
+
       // Create order object
       const order = insertOrderSchema.parse({
         userId: user.id,
         shippingAddress: user.address,
         paymentMethod: user.paymentMethod,
-        itemsPrice: cart.itemsPrice,
-        shippingPrice: cart.shippingPrice,
-        taxPrice: cart.taxPrice,
-        totalPrice: cart.totalPrice,
+        itemsPrice: freshPricing.itemsPrice,
+        shippingPrice: freshPricing.shippingPrice,
+        taxPrice: freshPricing.taxPrice,
+        totalPrice: freshPricing.totalPrice,
       });
-  
+
       // Create a transaction to create order and order items in database
       const insertedOrderId = await prisma.$transaction(async (tx) => {
         // Create order
-        const insertedOrder = await tx.order.create({ data: order });
+        const insertedOrder = await tx.order.create({
+          data: {
+            ...order,
+            couponCode: validatedCoupon?.valid ? validatedCoupon.coupon.code : null,
+            discountAmount,
+          },
+        });
+
+        // Atomically record the coupon redemption alongside order creation
+        if (validatedCoupon?.valid) {
+          await tx.coupon.update({
+            where: { id: validatedCoupon.coupon.id },
+            data: { usedCount: { increment: 1 } },
+          });
+        }
+
         // Create order items from the cart items
         for (const item of cart.items as CartItem[]) {
           await tx.orderItem.create({
@@ -90,6 +135,8 @@ export async function createOrder() {
             taxPrice: 0,
             shippingPrice: 0,
             itemsPrice: 0,
+            couponCode: null,
+            discountAmount: 0,
           },
         });
   
@@ -101,7 +148,7 @@ export async function createOrder() {
       return {
         success: true,
         message: 'Order created',
-        redirectTo: `/order/${insertedOrderId}`,
+        redirectTo: `/order/${insertedOrderId}?new=1`,
       };
     } catch (error) {
       if (isRedirectError(error)) throw error;
@@ -262,6 +309,11 @@ export async function createOrder() {
     sendPurchaseReceipt({
       order: {
         ...updatedOrder,
+        itemsPrice: updatedOrder.itemsPrice.toString(),
+        shippingPrice: updatedOrder.shippingPrice.toString(),
+        taxPrice: updatedOrder.taxPrice.toString(),
+        totalPrice: updatedOrder.totalPrice.toString(),
+        discountAmount: updatedOrder.discountAmount.toString(),
         shippingAddress: updatedOrder.shippingAddress as ShippingAddress,
         paymentResult: updatedOrder.paymentResult as PaymentResult,
       },

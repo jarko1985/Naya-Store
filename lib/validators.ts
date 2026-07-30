@@ -23,6 +23,7 @@ export const insertProductSchema = z.object({
     isFeatured: z.boolean(),
     banner: z.string().nullable(),
     price: currency,
+    compareAtPrice: z.string().nullable().optional(),
   });
   // Schema for signing users in
 export const signInFormSchema = z.object({
@@ -62,6 +63,7 @@ export const signUpFormSchema = z
     color: z.string().min(1, 'Color is required'),
     size: z.string().min(1, 'Size is required'),
     price: currency,
+    compareAtPrice: z.string().nullable().optional(),
     stock: z.coerce.number().min(0, 'Stock must be 0 or more'),
     image: z.string().min(1, 'Image is required'),
   });
@@ -161,4 +163,41 @@ export const signUpFormSchema = z
   export const updateProductSchema = insertProductSchema.extend({
     id: z.string().min(1, 'Id is required'),
   });
-  
+
+  // Schema for toggling a wishlist item
+  export const wishlistItemSchema = z.object({
+    productId: z.string().min(1, 'Product is required'),
+    variantId: z.string().optional(),
+  });
+
+  // Schema for newsletter signup
+  export const newsletterSchema = z.object({
+    email: z.string().email('Invalid email address'),
+    source: z.string().optional(),
+  });
+
+  // Schema for applying a coupon code
+  export const couponCodeSchema = z.object({
+    code: z.string().min(3, 'Code must be at least 3 characters').max(30),
+  });
+
+  // Schema for admin coupon create/update
+  export const insertCouponSchema = z
+    .object({
+      code: z.string().min(3, 'Code must be at least 3 characters').max(30),
+      type: z.enum(['percent', 'fixed'], { message: 'Type must be percent or fixed' }),
+      value: z.coerce.number().positive('Value must be greater than 0'),
+      minOrderValue: z.coerce.number().nonnegative().optional().nullable(),
+      maxUses: z.coerce.number().int().positive().optional().nullable(),
+      startsAt: z.string().optional().nullable(),
+      expiresAt: z.string().optional().nullable(),
+      isActive: z.boolean(),
+    })
+    .refine((data) => data.type !== 'percent' || data.value <= 100, {
+      message: 'Percent discount cannot exceed 100',
+      path: ['value'],
+    });
+
+  export const updateCouponSchema = insertCouponSchema.extend({
+    id: z.string().min(1, 'Id is required'),
+  });

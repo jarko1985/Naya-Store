@@ -1,30 +1,25 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import { APP_NAME } from '@/lib/constants';
 import Menu from './menu';
 import CategoryDrawer from './category-drawer';
 import Search from './search';
+import Logo from '@/components/shared/logo';
+import { getMyCart } from '@/lib/actions/cart.actions';
+import { CartItem } from '@/types';
 
-const Header = () => {
+const Header = async () => {
+  const cart = await getMyCart();
+  const cartCount = cart ? (cart.items as CartItem[]).reduce((acc, item) => acc + item.qty, 0) : 0;
+
   return (
-    <header className='w-full border-b'>
+    <header className='w-full border-b shadow-sm'>
       <div className='wrapper flex-between'>
         <div className='flex-start'>
           <CategoryDrawer />
-          <Link href='/' className='flex-start ml-4'>
-            <Image
-              src='/images/logo/logo_256.svg'
-              alt={`${APP_NAME} logo`}
-              height={200}
-              width={200}
-              priority={true}
-            />
-          </Link>
+          <Logo size='sm' className='ml-4' />
         </div>
         <div className='hidden md:block'>
           <Search />
         </div>
-        <Menu />
+        <Menu cartCount={cartCount} />
       </div>
     </header>
   );

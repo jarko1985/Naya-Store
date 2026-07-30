@@ -38,6 +38,7 @@ import {
       taxPrice: '10',
       shippingPrice: '10',
       itemsPrice: '80',
+      discountAmount: '0',
       orderitems: sampleData.products.map((x) => ({
         name: x.name,
         orderId: '123',

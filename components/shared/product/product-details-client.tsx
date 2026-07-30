@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { useTransition } from 'react';
@@ -18,9 +18,12 @@ import {
   ChevronRight,
   Ruler,
   Copy,
+  Scale,
 } from 'lucide-react';
 import { Cart, CartItem, Product, ProductVariant } from '@/types';
 import { addItemToCart, removeItemFromCart } from '@/lib/actions/cart.actions';
+import { toggleWishlistItem } from '@/lib/actions/wishlist.actions';
+import { useCompare } from '@/lib/hooks/use-compare';
 import ProductGallery from './product-gallery';
 import Rating from './rating';
 import {
@@ -36,6 +39,7 @@ interface ProductDetailsClientProps {
   variants: ProductVariant[];
   cart?: Cart;
   userId?: string;
+  initialWishlisted?: boolean;
 }
 
 // color name → hex (mirrors product-form.tsx)
@@ -60,17 +64,25 @@ const ProductDetailsClient = ({
   product,
   variants,
   cart,
+  userId,
+  initialWishlisted = false,
 }: ProductDetailsClientProps) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isWishlistPending, startWishlistTransition] = useTransition();
+  const { isComparing, toggle: toggleCompare, limit: compareLimit } = useCompare();
+  const comparing = isComparing(product.id);
 
   const [selectedColor, setSelectedColor] = useState<string | null>(product.color ?? null);
   const [selectedSize, setSelectedSize] = useState<string | null>(product.size ?? null);
-  const [wishlisted, setWishlisted] = useState(false);
+  const [wishlisted, setWishlisted] = useState(initialWishlisted);
   const [copiedSku, setCopiedSku] = useState(false);
   const [shippingOpen, setShippingOpen] = useState(false);
   const [returnOpen, setReturnOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
+  const [faqOpen, setFaqOpen] = useState<number | null>(null);
+  const [mainBuyBarVisible, setMainBuyBarVisible] = useState(true);
+  const buyBarRef = useRef<HTMLDivElement>(null);
 
   const hasVariants = variants.length > 0;
 
@@ -210,9 +222,58 @@ const ProductDetailsClient = ({
   };
 
   const handleWishlist = () => {
-    setWishlisted((prev) => !prev);
-    toast.success(wishlisted ? 'Removed from wishlist' : 'Added to wishlist ♥');
+    if (!userId) {
+      router.push('/sign-in');
+      return;
+    }
+
+    const nextState = !wishlisted;
+    setWishlisted(nextState);
+
+    startWishlistTransition(async () => {
+      const res = await toggleWishlistItem({ productId: product.id });
+      if (!res.success) {
+        setWishlisted(!nextState);
+        toast.error(res.message);
+        return;
+      }
+      toast.success(res.message);
+    });
   };
+
+  const handleCompareToggle = () => {
+    const result = toggleCompare(product.id);
+    if (result === 'limit-reached') {
+      toast.error(`You can compare up to ${compareLimit} products at a time`);
+    }
+  };
+
+  useEffect(() => {
+    const el = buyBarRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setMainBuyBarVisible(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const FAQ_ITEMS = [
+    {
+      question: 'What payment methods do you accept?',
+      answer: 'We accept all major credit/debit cards, PayPal, and cash on delivery in select regions.',
+    },
+    {
+      question: 'How long does shipping take?',
+      answer: 'Standard delivery takes 5–10 business days. Orders above $100 ship free.',
+    },
+    {
+      question: 'Can I return this item?',
+      answer: 'Yes — unworn items in original packaging can be returned within 30 days for a full refund or exchange.',
+    },
+  ];
 
   return (
     <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 xl:gap-12'>
@@ -438,7 +499,7 @@ const ProductDetailsClient = ({
 
 
         {/* ── 6. Add to Cart + Wishlist ── */}
-        <div className='flex gap-2'>
+        <div ref={buyBarRef} className='flex gap-2'>
           {/* Add / Remove buttons */}
           {existItem ? (
             <div className='flex flex-1 items-center rounded-full border border-border overflow-hidden shadow-sm'>
@@ -484,16 +545,35 @@ const ProductDetailsClient = ({
           <button
             type='button'
             onClick={handleWishlist}
-            className={`h-12 w-12 rounded-full border-2 flex items-center justify-center transition-all duration-200 hover:shadow-md active:scale-95 focus:outline-none ${
+            disabled={isWishlistPending}
+            className={`h-12 w-12 rounded-full border-2 flex items-center justify-center transition-all duration-200 hover:shadow-md active:scale-95 focus:outline-none disabled:opacity-60 ${
               wishlisted
                 ? 'border-red-400 bg-red-50 dark:bg-red-950/30 text-red-500'
                 : 'border-gray-300 hover:border-red-300 text-muted-foreground hover:text-red-400'
             }`}
             title={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
           >
-            <Heart
-              className={`w-5 h-5 transition-all duration-200 ${wishlisted ? 'fill-red-500 text-red-500 scale-110' : ''}`}
-            />
+            {isWishlistPending ? (
+              <Loader className='w-5 h-5 animate-spin' />
+            ) : (
+              <Heart
+                className={`w-5 h-5 transition-all duration-200 ${wishlisted ? 'fill-red-500 text-red-500 scale-110' : ''}`}
+              />
+            )}
+          </button>
+
+          {/* Compare toggle */}
+          <button
+            type='button'
+            onClick={handleCompareToggle}
+            className={`h-12 w-12 rounded-full border-2 flex items-center justify-center transition-all duration-200 hover:shadow-md active:scale-95 focus:outline-none ${
+              comparing
+                ? 'border-primary bg-primary/5 text-primary'
+                : 'border-gray-300 hover:border-primary/50 text-muted-foreground hover:text-primary'
+            }`}
+            title={comparing ? 'Remove from compare' : 'Add to compare'}
+          >
+            <Scale className='w-5 h-5' />
           </button>
         </div>
 
@@ -562,7 +642,59 @@ const ProductDetailsClient = ({
             </p>
           </div>
         </div>
+
+        {/* ── 9. FAQ ── */}
+        <div className='rounded-xl border border-border overflow-hidden shadow-sm'>
+          <div className='px-4 py-3 border-b border-border bg-muted/20'>
+            <p className='text-sm font-semibold'>Frequently Asked Questions</p>
+          </div>
+          {FAQ_ITEMS.map((item, i) => (
+            <div key={item.question} className={i === FAQ_ITEMS.length - 1 ? '' : 'border-b border-border'}>
+              <button
+                type='button'
+                onClick={() => setFaqOpen((prev) => (prev === i ? null : i))}
+                className='w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors text-left'
+              >
+                <span className='text-sm font-medium'>{item.question}</span>
+                <ChevronRight
+                  className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${faqOpen === i ? 'rotate-90' : ''}`}
+                />
+              </button>
+              {faqOpen === i && (
+                <div className='px-4 pb-3 pt-0'>
+                  <p className='text-xs text-muted-foreground leading-relaxed'>{item.answer}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* ── Sticky mobile buy bar ── */}
+      {!mainBuyBarVisible && (
+        <div className='md:hidden fixed bottom-0 inset-x-0 z-40 bg-background border-t border-border shadow-lg px-4 py-3 flex items-center gap-3'>
+          <div className='flex-1 min-w-0'>
+            <p className='text-xs text-muted-foreground truncate'>{product.name}</p>
+            <p className='text-lg font-bold'>${displayPrice.toFixed(2)}</p>
+          </div>
+          <button
+            type='button'
+            onClick={handleAddToCart}
+            disabled={isPending || displayStock === 0}
+            className='h-11 px-6 rounded-full bg-black text-white text-sm font-bold uppercase tracking-wide flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0'
+          >
+            {isPending ? (
+              <Loader className='w-4 h-4 animate-spin' />
+            ) : displayStock === 0 ? (
+              'Out of Stock'
+            ) : existItem ? (
+              'Update Cart'
+            ) : (
+              'Add to Cart'
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

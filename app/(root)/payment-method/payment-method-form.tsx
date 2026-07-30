@@ -12,13 +12,20 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowRight, Loader, CreditCard, Wallet, Banknote, Check, ShieldCheck } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { updateUserPaymentMethod } from '@/lib/actions/user.actions';
+import { cn } from '@/lib/utils';
+
+const PAYMENT_METHOD_META: Record<string, { icon: React.ElementType; description: string }> = {
+  PayPal: { icon: Wallet, description: 'Pay securely with your PayPal balance or linked cards' },
+  Stripe: { icon: CreditCard, description: 'Pay with credit or debit card' },
+  CashOnDelivery: { icon: Banknote, description: 'Pay with cash when your order arrives' },
+};
 
 const PaymentMethodForm = ({
   preferredPaymentMethod,
@@ -50,67 +57,104 @@ const PaymentMethodForm = ({
   };
 
   return (
-    <>
-      <div className='max-w-md mx-auto space-y-4'>
-        <h1 className='h2-bold mt-4'>Payment Method</h1>
-        <p className='text-sm text-muted-foreground'>
-          Please select a payment method
-        </p>
+    <Card className='overflow-hidden'>
+      <CardContent className='p-6 md:p-8'>
+        <div className='flex items-center gap-3 mb-6'>
+          <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary border shadow-sm'>
+            <CreditCard className='w-5 h-5' />
+          </div>
+          <div>
+            <h1 className='text-xl font-bold'>Payment Method</h1>
+            <p className='text-sm text-muted-foreground'>Choose how you&apos;d like to pay</p>
+          </div>
+        </div>
+
         <Form {...form}>
           <form
             method='post'
-            className='space-y-4'
+            className='space-y-5'
             onSubmit={form.handleSubmit(onSubmit)}
           >
-            <div className='flex flex-col md:flex-row gap-5'>
-              <FormField
-                control={form.control}
-                name='type'
-                render={({ field }) => (
-                  <FormItem className='space-y-3'>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        className='flex flex-col space-y-2'
-                      >
-                        {PAYMENT_METHODS.map((paymentMethod) => (
-                          <FormItem
+            <FormField
+              control={form.control}
+              name='type'
+              render={({ field }) => (
+                <FormItem className='space-y-0'>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      className='flex flex-col gap-3'
+                    >
+                      {PAYMENT_METHODS.map((paymentMethod) => {
+                        const meta = PAYMENT_METHOD_META[paymentMethod];
+                        const Icon = meta?.icon ?? Wallet;
+                        const isSelected = field.value === paymentMethod;
+
+                        return (
+                          <label
                             key={paymentMethod}
-                            className='flex items-center space-x-3 space-y-0'
+                            htmlFor={paymentMethod}
+                            className={cn(
+                              'relative flex items-center gap-4 rounded-xl border p-4 cursor-pointer transition-all',
+                              isSelected
+                                ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary'
+                                : 'border-border hover:border-primary/40 hover:bg-muted/30'
+                            )}
                           >
+                            <div
+                              className={cn(
+                                'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border',
+                                isSelected ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground'
+                              )}
+                            >
+                              <Icon className='w-4.5 h-4.5' />
+                            </div>
+                            <div className='flex-1 min-w-0'>
+                              <p className='text-sm font-semibold'>{paymentMethod}</p>
+                              {meta?.description && (
+                                <p className='text-xs text-muted-foreground mt-0.5'>{meta.description}</p>
+                              )}
+                            </div>
+                            {isSelected && (
+                              <span className='flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground'>
+                                <Check className='w-3 h-3' />
+                              </span>
+                            )}
                             <FormControl>
                               <RadioGroupItem
+                                id={paymentMethod}
                                 value={paymentMethod}
-                                checked={field.value === paymentMethod}
+                                checked={isSelected}
+                                className='sr-only'
                               />
                             </FormControl>
-                            <FormLabel className='font-normal'>
-                              {paymentMethod}
-                            </FormLabel>
-                          </FormItem>
-                        ))}
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                          </label>
+                        );
+                      })}
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <div className='flex gap-2'>
-              <Button type='submit' disabled={isPending}>
-                {isPending ? (
-                  <Loader className='w-4 h-4 animate-spin' />
-                ) : (
-                  <ArrowRight className='w-4 h-4' />
-                )}{' '}
-                Continue
-              </Button>
-            </div>
+            <Button type='submit' disabled={isPending} className='w-full h-11 mt-2'>
+              {isPending ? (
+                <Loader className='w-4 h-4 animate-spin' />
+              ) : (
+                <ArrowRight className='w-4 h-4' />
+              )}{' '}
+              Continue to Review
+            </Button>
+
+            <p className='flex items-center justify-center gap-1.5 text-xs text-muted-foreground'>
+              <ShieldCheck className='w-3 h-3' />
+              All transactions are encrypted and PCI-compliant
+            </p>
           </form>
         </Form>
-      </div>
-    </>
+      </CardContent>
+    </Card>
   );
 };
 

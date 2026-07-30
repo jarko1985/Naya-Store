@@ -22,6 +22,12 @@ export const prisma = new PrismaClient({ adapter }).$extends({
             return product.rating.toString();
           },
         },
+        compareAtPrice: {
+          needs: { compareAtPrice: true },
+          compute(product) {
+            return product.compareAtPrice ? product.compareAtPrice.toString() : null;
+          },
+        },
       },
       cart: {
         itemsPrice: {
@@ -46,6 +52,12 @@ export const prisma = new PrismaClient({ adapter }).$extends({
           needs: { totalPrice: true },
           compute(cart) {
             return cart.totalPrice.toString();
+          },
+        },
+        discountAmount: {
+          needs: { discountAmount: true },
+          compute(cart) {
+            return cart.discountAmount.toString();
           },
         },
       },
@@ -74,11 +86,43 @@ export const prisma = new PrismaClient({ adapter }).$extends({
             return cart.totalPrice.toString();
           },
         },
+        discountAmount: {
+          needs: { discountAmount: true },
+          compute(order) {
+            return order.discountAmount.toString();
+          },
+        },
       },
       orderItem: {
         price: {
           compute(cart) {
             return cart.price.toString();
+          },
+        },
+      },
+      coupon: {
+        value: {
+          needs: { value: true },
+          compute(coupon) {
+            return Number(coupon.value);
+          },
+        },
+        minOrderValue: {
+          needs: { minOrderValue: true },
+          compute(coupon) {
+            return coupon.minOrderValue !== null ? Number(coupon.minOrderValue) : null;
+          },
+        },
+        startsAt: {
+          needs: { startsAt: true },
+          compute(coupon) {
+            return coupon.startsAt ? coupon.startsAt.toISOString() : null;
+          },
+        },
+        expiresAt: {
+          needs: { expiresAt: true },
+          compute(coupon) {
+            return coupon.expiresAt ? coupon.expiresAt.toISOString() : null;
           },
         },
       },

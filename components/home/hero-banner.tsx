@@ -6,7 +6,7 @@ import { APP_NAME } from '@/lib/constants';
 const HeroBanner = () => {
   return (
     <div
-      className='relative w-full overflow-hidden rounded-2xl mb-12 border border-white/5 animate-gradient-flow'
+      className='relative w-full overflow-hidden rounded-2xl mb-12 border border-white/5 shadow-2xl shadow-indigo-950/30 animate-gradient-flow'
       style={{
         backgroundImage:
           'linear-gradient(-45deg, #0f172a, #1e1b4b, #0c1a2e, #312e81, #0f172a, #1e3a5f, #0f172a)',

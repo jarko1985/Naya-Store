@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { ShippingAddress } from '@/types';
 import ShippingAddressForm from './shipping-address-form';
 import CheckoutSteps from '@/components/shared/checkout-steps';
+import CheckoutOrderSummary from '@/components/shared/checkout/checkout-order-summary';
 
 export const metadata: Metadata = {
   title: 'Shipping Address',
@@ -27,7 +28,14 @@ const ShippingAddressPage = async () => {
   return (
     <>
       <CheckoutSteps current={1} />
-      <ShippingAddressForm address={user.address as ShippingAddress} />
+      <div className='grid md:grid-cols-3 gap-6 max-w-5xl mx-auto'>
+        <div className='md:col-span-2'>
+          <ShippingAddressForm address={user.address as ShippingAddress} />
+        </div>
+        <div>
+          <CheckoutOrderSummary cart={cart} />
+        </div>
+      </div>
     </>
   );
 };

@@ -48,7 +48,7 @@ const DealCountdown = () => {
 
   if (!time) {
     return (
-      <section className='grid grid-cols-1 md:grid-cols-2 my-20'>
+      <section className='grid grid-cols-1 md:grid-cols-2 my-20 rounded-2xl border bg-card shadow-sm p-8'>
         <div className='flex flex-col gap-2 justify-center'>
           <h3 className='text-3xl font-bold'>Loading Countdown...</h3>
         </div>
@@ -63,7 +63,7 @@ const DealCountdown = () => {
     time.seconds === 0
   ) {
     return (
-      <section className='grid grid-cols-1 md:grid-cols-2 my-20'>
+      <section className='grid grid-cols-1 md:grid-cols-2 my-20 rounded-2xl border bg-card shadow-sm p-8 gap-6'>
         <div className='flex flex-col gap-2 justify-center'>
           <h3 className='text-3xl font-bold'>Deal Has Ended</h3>
           <p>
@@ -82,6 +82,7 @@ const DealCountdown = () => {
             alt='promotion'
             width={300}
             height={200}
+            className='rounded-xl border shadow-sm'
           />
         </div>
       </section>
@@ -89,7 +90,7 @@ const DealCountdown = () => {
   }
 
   return (
-    <section className='grid grid-cols-1 md:grid-cols-2 my-20'>
+    <section className='grid grid-cols-1 md:grid-cols-2 my-20 rounded-2xl border bg-card shadow-sm p-8 gap-6'>
       <div className='flex flex-col gap-2 justify-center'>
         <h3 className='text-3xl font-bold'>Deal Of The Month</h3>
         <p>
@@ -98,7 +99,7 @@ const DealCountdown = () => {
           making this month a celebration of savvy choices and amazing deals.
           Don&apos;t miss out! 🎁🛒
         </p>
-        <ul className='grid grid-cols-4'>
+        <ul className='grid grid-cols-4 gap-2 my-2'>
           <StatBox label='Days' value={time.days} />
           <StatBox label='Hours' value={time.hours} />
           <StatBox label='Minutes' value={time.minutes} />
@@ -110,12 +111,13 @@ const DealCountdown = () => {
           </Button>
         </div>
       </div>
-      <div className='flex justify-center'>
+      <div className='flex justify-center items-center'>
         <Image
           src='/images/promo.jpg'
           alt='promotion'
           width={300}
           height={200}
+          className='rounded-xl border shadow-sm'
         />
       </div>
     </section>
@@ -123,9 +125,9 @@ const DealCountdown = () => {
 };
 
 const StatBox = ({ label, value }: { label: string; value: number }) => (
-  <li className='p-4 w-full text-center'>
-    <p className='text-3xl font-bold'>{value}</p>
-    <p>{label}</p>
+  <li className='p-3 w-full text-center rounded-xl border bg-background shadow-sm'>
+    <p className='text-3xl font-bold tabular-nums'>{value}</p>
+    <p className='text-xs text-muted-foreground uppercase tracking-wide'>{label}</p>
   </li>
 );
 

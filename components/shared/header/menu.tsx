@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import ModeToggle from './mode-toggle';
 import Link from 'next/link';
-import { EllipsisVertical, ShoppingCart, UserIcon } from 'lucide-react';
+import { EllipsisVertical, ShoppingCart, UserIcon, Heart } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -11,14 +11,24 @@ import {
 } from '@/components/ui/sheet';
 import UserButton from './user-button';
 
-const Menu = () => {
+const Menu = ({ cartCount = 0 }: { cartCount?: number }) => {
   return (
     <div className='flex justify-end gap-3'>
       <nav className='hidden md:flex w-full max-w-xs gap-1'>
         <ModeToggle />
         <Button asChild variant='ghost'>
-          <Link href='/cart'>
+          <Link href='/cart' className='relative'>
             <ShoppingCart /> Cart
+            {cartCount > 0 && (
+              <span className='absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground'>
+                {cartCount}
+              </span>
+            )}
+          </Link>
+        </Button>
+        <Button asChild variant='ghost'>
+          <Link href='/wishlist'>
+            <Heart /> Wishlist
           </Link>
         </Button>
        <UserButton />
@@ -48,6 +58,21 @@ const Menu = () => {
                   <Link href='/cart' className='flex items-center gap-3'>
                     <ShoppingCart className='size-5 shrink-0' />
                     Cart
+                    {cartCount > 0 && (
+                      <span className='flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground'>
+                        {cartCount}
+                      </span>
+                    )}
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant='ghost'
+                  className='h-12 justify-start gap-3 rounded-none px-5 py-3 text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900'
+                >
+                  <Link href='/wishlist' className='flex items-center gap-3'>
+                    <Heart className='size-5 shrink-0' />
+                    Wishlist
                   </Link>
                 </Button>
               </div>

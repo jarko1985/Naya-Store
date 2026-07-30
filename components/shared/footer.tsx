@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   Truck,
@@ -18,6 +17,8 @@ import {
   Instagram,
   Youtube,
 } from 'lucide-react';
+import NewsletterForm from './footer/newsletter-form';
+import Logo from './logo';
 
 const features = [
   {
@@ -134,16 +135,7 @@ export default function Footer() {
         <p className='text-sm text-gray-500 mb-4'>
           Get our latest offers and news straight in your inbox.
         </p>
-        <div className='flex gap-0'>
-          <input
-            type='email'
-            placeholder='Enter email address'
-            className='flex-1 bg-gray-100 border border-gray-200 px-3 py-2 text-sm focus:outline-none'
-          />
-          <button className='bg-black text-white px-5 py-2 text-sm font-medium shrink-0'>
-            Subscribe
-          </button>
-        </div>
+        <NewsletterForm source='footer-mobile' />
       </div>
 
       {/* ── Nav columns (mobile: collapsible) ── */}
@@ -206,16 +198,7 @@ export default function Footer() {
             <p className='text-sm text-gray-500 mb-4'>
               Get our latest offers and news straight in your inbox.
             </p>
-            <div className='flex gap-0 mb-6'>
-              <input
-                type='email'
-                placeholder='Enter email address'
-                className='flex-1 bg-gray-100 border border-gray-200 px-3 py-2 text-sm focus:outline-none min-w-0'
-              />
-              <button className='bg-black text-white px-4 py-2 text-sm font-medium shrink-0'>
-                Subscribe
-              </button>
-            </div>
+            <NewsletterForm source='footer-desktop' className='mb-6' />
             {/* Social icons */}
             <div className='flex gap-4 flex-wrap mb-6'>
               {socialLinks.map(({ icon: Icon, href }, i) => (
@@ -315,13 +298,7 @@ export default function Footer() {
 
           {/* Logo */}
           <div className='flex items-center justify-start md:justify-end'>
-            <Image
-              src='/images/logo/logo_256.svg'
-              alt='Naya Store'
-              width={140}
-              height={70}
-              className='object-contain'
-            />
+            <Logo size='lg' />
           </div>
         </div>
       </div>

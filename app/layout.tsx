@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Fraunces } from "next/font/google";
 import { APP_NAME, APP_DESCRIPTION, SERVER_URL } from "@/lib/constants";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
@@ -8,7 +8,12 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
 });
-
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  style: ["normal", "italic"],
+  weight: ["500", "600", "700"],
+});
 export const metadata: Metadata = {
   title: {
     default: APP_NAME,
@@ -29,7 +34,7 @@ export default function Layout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.className} antialiased`}
+        className={`${inter.className} ${fraunces.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           {children}

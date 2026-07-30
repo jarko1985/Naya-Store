@@ -16,15 +16,20 @@ import {
 import { Calendar, User } from 'lucide-react';
 import { formatDateTime } from '@/lib/utils';
 import Rating from '@/components/shared/product/rating';
+import ReviewSummaryCard from '@/components/shared/review/review-summary-card';
 
 const ReviewList = ({
   userId,
   productId,
   productSlug,
+  averageRating = 0,
+  numReviews = 0,
 }: {
   userId: string;
   productId: string;
   productSlug: string;
+  averageRating?: number;
+  numReviews?: number;
 }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
 
@@ -45,6 +50,7 @@ const ReviewList = ({
 
   return (
     <div className='space-y-4'>
+      <ReviewSummaryCard reviews={reviews} averageRating={averageRating} numReviews={numReviews} />
       {reviews.length === 0 && <div>No reviews yet</div>}
       {userId ? (
         <ReviewForm

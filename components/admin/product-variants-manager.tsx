@@ -28,6 +28,7 @@ const emptyForm = {
   color: '',
   size: '',
   price: '',
+  compareAtPrice: '',
   stock: '',
   image: '',
 };
@@ -52,6 +53,7 @@ const ProductVariantsManager = ({
         color: form.color,
         size: form.size,
         price: form.price,
+        compareAtPrice: form.compareAtPrice || undefined,
         stock: Number(form.stock),
         image: form.image,
       });
@@ -208,6 +210,16 @@ const ProductVariantsManager = ({
                 placeholder='e.g. 29.99'
                 value={form.price}
                 onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+              />
+            </div>
+
+            {/* Compare-at Price */}
+            <div className='space-y-1'>
+              <label className='text-sm font-medium'>Compare-at Price</label>
+              <Input
+                placeholder='optional'
+                value={form.compareAtPrice}
+                onChange={(e) => setForm((f) => ({ ...f, compareAtPrice: e.target.value }))}
               />
             </div>
 

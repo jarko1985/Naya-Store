@@ -40,6 +40,7 @@ export const productDefaultValues = {
   brand: '',
   description: '',
   price: '0',
+  compareAtPrice: '',
   stock: 0,
   rating: '0',
   numReviews: '0',
@@ -79,3 +80,13 @@ export const PRODUCT_COLORS = [
   'Beige',
   'Teal',
 ];
+
+export const LOW_STOCK_THRESHOLD = 5;
+
+export const FREE_SHIPPING_THRESHOLD = 100;
+
+export const COMPARE_PRODUCTS_LIMIT = 4;
+
+export const RECENTLY_VIEWED_LIMIT = 8;
+
+export const PROMO_BANNER_MESSAGE = `Free shipping on orders over $${FREE_SHIPPING_THRESHOLD} — no code needed`;
