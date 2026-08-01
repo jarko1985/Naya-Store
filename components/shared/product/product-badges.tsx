@@ -1,4 +1,6 @@
-import { Badge } from '@/components/ui/badge';
+'use client';
+
+import { motion } from 'framer-motion';
 import { LOW_STOCK_THRESHOLD } from '@/lib/constants';
 
 interface ProductBadgesProps {
@@ -18,16 +20,26 @@ const ProductBadges = ({ price, compareAtPrice, stock, className }: ProductBadge
   if (!isOnSale && !isLowStock) return null;
 
   return (
-    <div className={className ?? 'absolute top-2 left-2 z-10 flex flex-col gap-1'}>
+    <div className={className ?? 'absolute top-2.5 left-2.5 z-10 flex flex-col items-start gap-1.5'}>
       {isOnSale && (
-        <Badge className='bg-destructive text-destructive-foreground hover:bg-destructive'>
-          -{percentOff}%
-        </Badge>
+        <motion.span
+          initial={{ opacity: 0, scale: 0.6, y: -4 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          variants={{ rest: { scale: 1 }, hover: { scale: 1.06 } }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          className="relative flex items-center gap-1 overflow-hidden rounded-md bg-linear-to-br from-rose-500 to-red-600 px-2 py-1 text-[11px] font-bold tracking-wide text-white shadow-[0_2px_10px_-2px_rgba(225,29,72,0.6)] ring-1 ring-white/25"
+        >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-linear-to-br from-white/25 via-transparent to-transparent"
+          />
+          <span className="relative tabular-nums">-{percentOff}%</span>
+        </motion.span>
       )}
       {isLowStock && (
-        <Badge variant='outline' className='bg-background/90 backdrop-blur-sm'>
+        <span className="rounded-md border bg-background/90 px-2 py-1 text-[11px] font-medium text-foreground shadow-sm backdrop-blur-sm">
           Only {stock} left
-        </Badge>
+        </span>
       )}
     </div>
   );

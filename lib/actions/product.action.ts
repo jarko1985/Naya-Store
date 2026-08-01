@@ -102,9 +102,9 @@ export async function getProductBySlug(slug: string) {
     });
   
     const dataCount = await prisma.product.count();
-  
+
     return {
-      data,
+      data: convertToPlainObject(data),
       totalPages: Math.ceil(dataCount / limit),
     };
   }

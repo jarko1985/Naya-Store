@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import ProductDetailsClient from '@/components/shared/product/product-details-client';
 import { getMyCart } from '@/lib/actions/cart.actions';
 import { getProductBySlug, getRelatedProducts } from '@/lib/actions/product.action';
+import { getReviews } from '@/lib/actions/review.actions';
 import { isProductWishlisted } from '@/lib/actions/wishlist.actions';
 import { recordProductView, getRecentlyViewed } from '@/lib/actions/recently-viewed.actions';
 import { Product, ProductVariant, RecentlyViewedItem } from '@/types';
@@ -23,9 +24,10 @@ const ProductDetailsPage = async (props: {
 
   await recordProductView(product.id);
 
-  const [relatedProducts, recentlyViewed] = await Promise.all([
+  const [relatedProducts, recentlyViewed, { data: reviews }] = await Promise.all([
     getRelatedProducts({ productId: product.id, category: product.category }),
     getRecentlyViewed(product.id) as Promise<RecentlyViewedItem[]>,
+    getReviews({ productId: product.id }),
   ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,6 +42,7 @@ const ProductDetailsPage = async (props: {
         cart={cart}
         userId={userId}
         initialWishlisted={initialWishlisted}
+        reviews={reviews}
       />
 
       {/* Customer Reviews */}

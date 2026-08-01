@@ -23,7 +23,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { getAllCategories } from '@/lib/actions/product.action';
 import { getAllCategoryMeta } from '@/lib/actions/category.actions';
+import BrowseAllLink from './browse-all-link';
 import type { LucideIcon } from 'lucide-react';
+
+const MAX_CATEGORIES = 6;
 
 type CategoryStyle = {
   icon: LucideIcon;
@@ -90,6 +93,10 @@ const CategoryGrid = async () => {
 
   if (!categories.length) return null;
 
+  const topCategories = [...categories]
+    .sort((a, b) => b._count - a._count)
+    .slice(0, MAX_CATEGORIES);
+
   const metaMap = Object.fromEntries(
     categoryMeta.map((m: { name: string; image: string }) => [m.name, m.image])
   );
@@ -104,17 +111,12 @@ const CategoryGrid = async () => {
           </p>
           <h2 className='text-2xl font-bold'>Shop by Category</h2>
         </div>
-        <Link
-          href='/search'
-          className='text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block'
-        >
-          Browse all →
-        </Link>
+        <BrowseAllLink />
       </div>
 
       {/* Category grid */}
       <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3'>
-        {categories.map(({ category, _count }: { category: string; _count: number }) => {
+        {topCategories.map(({ category, _count }: { category: string; _count: number }) => {
           const image = metaMap[category];
           const { icon: Icon, gradient, iconColor } = getCategoryStyle(category);
 

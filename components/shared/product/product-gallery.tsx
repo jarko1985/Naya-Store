@@ -7,7 +7,7 @@ import { FreeMode } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
 import 'swiper/css';
 import 'swiper/css/free-mode';
-import { ChevronUp, ChevronDown, ZoomIn } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ProductGalleryProps {
@@ -49,70 +49,11 @@ const ProductGallery = ({ images, activeVariantImage }: ProductGalleryProps) => 
   const currentSrc = displayImages[activeIndex] ?? displayImages[0];
 
   return (
-    <div className='flex gap-3 h-[580px] select-none'>
-      {/* ── Vertical thumbnail strip ── */}
-      <div className='relative w-[76px] flex-shrink-0 flex flex-col gap-1'>
-        {/* Scroll up indicator */}
-        <button
-          type='button'
-          className='w-full flex items-center justify-center py-0.5 text-muted-foreground hover:text-foreground transition-colors'
-          onClick={() => swiperRef.current?.slidePrev()}
-        >
-          <ChevronUp className='w-4 h-4' />
-        </button>
-
-        <div className='flex-1 overflow-hidden'>
-          <Swiper
-            direction='vertical'
-            slidesPerView='auto'
-            spaceBetween={6}
-            freeMode
-            onSwiper={(swiper) => (swiperRef.current = swiper)}
-            modules={[FreeMode]}
-            className='h-full'
-          >
-            {displayImages.map((img, i) => (
-              <SwiperSlide
-                key={img + i}
-                style={{ height: '76px', width: '76px' }}
-              >
-                <button
-                  type='button'
-                  onClick={() => handleThumbClick(i)}
-                  className={cn(
-                    'w-full h-full rounded-lg overflow-hidden border-2 transition-all duration-200 focus:outline-none',
-                    activeIndex === i
-                      ? 'border-black shadow-md scale-[1.03]'
-                      : 'border-transparent hover:border-gray-300 hover:shadow-sm'
-                  )}
-                >
-                  <Image
-                    src={img}
-                    alt={`thumbnail ${i + 1}`}
-                    width={76}
-                    height={76}
-                    className='w-full h-full object-cover object-center'
-                  />
-                </button>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
-
-        {/* Scroll down indicator */}
-        <button
-          type='button'
-          className='w-full flex items-center justify-center py-0.5 text-muted-foreground hover:text-foreground transition-colors'
-          onClick={() => swiperRef.current?.slideNext()}
-        >
-          <ChevronDown className='w-4 h-4' />
-        </button>
-      </div>
-
+    <div className='flex flex-col gap-3 select-none'>
       {/* ── Main image ── */}
       <div
         ref={mainImageRef}
-        className='relative flex-1 rounded-xl overflow-hidden bg-gray-50 group cursor-zoom-in'
+        className='relative h-[500px] rounded-xl overflow-hidden bg-gray-50 group cursor-zoom-in'
         onMouseEnter={() => setIsZoomed(true)}
         onMouseLeave={() => setIsZoomed(false)}
         onMouseMove={handleMouseMove}
@@ -153,6 +94,67 @@ const ProductGallery = ({ images, activeVariantImage }: ProductGalleryProps) => 
           {activeIndex + 1} / {displayImages.length}
         </div>
       </div>
+
+      {/* ── Horizontal thumbnail strip ── */}
+      {displayImages.length > 1 && (
+        <div className='relative flex items-center gap-1 h-[76px]'>
+          {/* Scroll left indicator */}
+          <button
+            type='button'
+            className='flex-shrink-0 flex items-center justify-center px-0.5 h-full text-muted-foreground hover:text-foreground transition-colors'
+            onClick={() => swiperRef.current?.slidePrev()}
+          >
+            <ChevronLeft className='w-4 h-4' />
+          </button>
+
+          <div className='flex-1 overflow-hidden'>
+            <Swiper
+              direction='horizontal'
+              slidesPerView='auto'
+              spaceBetween={6}
+              freeMode
+              onSwiper={(swiper) => (swiperRef.current = swiper)}
+              modules={[FreeMode]}
+              className='h-full'
+            >
+              {displayImages.map((img, i) => (
+                <SwiperSlide
+                  key={img + i}
+                  style={{ height: '76px', width: '76px' }}
+                >
+                  <button
+                    type='button'
+                    onClick={() => handleThumbClick(i)}
+                    className={cn(
+                      'w-full h-full rounded-lg overflow-hidden border-2 transition-all duration-200 focus:outline-none',
+                      activeIndex === i
+                        ? 'border-black shadow-md scale-[1.03]'
+                        : 'border-transparent hover:border-gray-300 hover:shadow-sm'
+                    )}
+                  >
+                    <Image
+                      src={img}
+                      alt={`thumbnail ${i + 1}`}
+                      width={76}
+                      height={76}
+                      className='w-full h-full object-cover object-center'
+                    />
+                  </button>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+
+          {/* Scroll right indicator */}
+          <button
+            type='button'
+            className='flex-shrink-0 flex items-center justify-center px-0.5 h-full text-muted-foreground hover:text-foreground transition-colors'
+            onClick={() => swiperRef.current?.slideNext()}
+          >
+            <ChevronRight className='w-4 h-4' />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

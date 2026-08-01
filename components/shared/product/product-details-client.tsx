@@ -20,11 +20,12 @@ import {
   Copy,
   Scale,
 } from 'lucide-react';
-import { Cart, CartItem, Product, ProductVariant } from '@/types';
+import { Cart, CartItem, Product, ProductVariant, Review } from '@/types';
 import { addItemToCart, removeItemFromCart } from '@/lib/actions/cart.actions';
 import { toggleWishlistItem } from '@/lib/actions/wishlist.actions';
 import { useCompare } from '@/lib/hooks/use-compare';
 import ProductGallery from './product-gallery';
+import ReviewSummaryCard from './review-summary-card';
 import Rating from './rating';
 import {
   Dialog,
@@ -40,6 +41,7 @@ interface ProductDetailsClientProps {
   cart?: Cart;
   userId?: string;
   initialWishlisted?: boolean;
+  reviews?: Review[];
 }
 
 // color name → hex (mirrors product-form.tsx)
@@ -66,6 +68,7 @@ const ProductDetailsClient = ({
   cart,
   userId,
   initialWishlisted = false,
+  reviews = [],
 }: ProductDetailsClientProps) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -280,10 +283,15 @@ const ProductDetailsClient = ({
       {/* ══════════════════════════════════════════
           LEFT — Product Gallery
       ══════════════════════════════════════════ */}
-      <div>
+      <div className='flex flex-col gap-5'>
         <ProductGallery
           images={product.images}
           activeVariantImage={activeVariantImage}
+        />
+        <ReviewSummaryCard
+          rating={Number(product.rating)}
+          numReviews={product.numReviews}
+          reviews={reviews}
         />
       </div>
 

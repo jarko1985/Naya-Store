@@ -24,12 +24,14 @@ function AddButton({ item }: { item: CartItem }) {
     return (
       <Button
         disabled={isPending}
-        variant='outline'
+        variant='ghost'
+        size='icon-sm'
+        className='rounded-none hover:bg-muted'
         type='button'
         onClick={() =>
           startTransition(async () => {
             const res = await addItemToCart(item);
-  
+
             if (!res.success) {
               toast.error(res.message);
             }
@@ -37,25 +39,27 @@ function AddButton({ item }: { item: CartItem }) {
         }
       >
         {isPending ? (
-          <Loader className='w-4 h-4 animate-spin' />
+          <Loader className='w-3.5 h-3.5 animate-spin' />
         ) : (
-          <Plus className='w-4 h-4' />
+          <Plus className='w-3.5 h-3.5' />
         )}
       </Button>
     );
   }
-  
+
   function RemoveButton({ item }: { item: CartItem }) {
     const [isPending, startTransition] = useTransition();
     return (
       <Button
         disabled={isPending}
-        variant='outline'
+        variant='ghost'
+        size='icon-sm'
+        className='rounded-none hover:bg-muted'
         type='button'
         onClick={() =>
           startTransition(async () => {
             const res = await removeItemFromCart(item.productId, item.variantId);
-  
+
             if (!res.success) {
               toast.error(res.message);
             }
@@ -63,9 +67,9 @@ function AddButton({ item }: { item: CartItem }) {
         }
       >
         {isPending ? (
-          <Loader className='w-4 h-4 animate-spin' />
+          <Loader className='w-3.5 h-3.5 animate-spin' />
         ) : (
-          <Minus className='w-4 h-4' />
+          <Minus className='w-3.5 h-3.5' />
         )}
       </Button>
     );
@@ -88,48 +92,72 @@ function AddButton({ item }: { item: CartItem }) {
             <div className='overflow-x-auto md:col-span-3 rounded-xl border bg-card shadow-sm'>
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead className='text-center'>Quantity</TableHead>
-                    <TableHead className='text-right'>Price</TableHead>
+                  <TableRow className='hover:bg-transparent'>
+                    <TableHead className='px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                      Item
+                    </TableHead>
+                    <TableHead className='text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                      Quantity
+                    </TableHead>
+                    <TableHead className='text-right px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                      Total
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cart.items.map((item) => (
-                    <TableRow key={`${item.slug}-${item.variantId ?? 'base'}`}>
-                      <TableCell>
-                        <Link
-                          href={`/product/${item.slug}`}
-                          className='flex items-center'
-                        >
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            width={50}
-                            height={50}
-                          />
-                          <div className='px-2'>
-                            <p>{item.name}</p>
-                            {(item.color || item.size) && (
-                              <p className='text-xs text-muted-foreground'>
-                                {[item.color, item.size].filter(Boolean).join(' / ')}
+                  {cart.items.map((item) => {
+                    const unitPrice = Number(item.price);
+                    const lineTotal = unitPrice * item.qty;
+                    return (
+                      <TableRow key={`${item.slug}-${item.variantId ?? 'base'}`}>
+                        <TableCell className='whitespace-normal w-full px-4 py-4'>
+                          <Link
+                            href={`/product/${item.slug}`}
+                            className='group flex items-center gap-4'
+                          >
+                            <Image
+                              src={item.image}
+                              alt={item.name}
+                              width={112}
+                              height={112}
+                              className='rounded-xl border bg-muted/20 object-cover w-24 h-24 sm:w-28 sm:h-28 shrink-0 shadow-sm'
+                            />
+                            <div className='min-w-0'>
+                              <p className='font-medium leading-snug break-words line-clamp-2 group-hover:text-primary transition-colors'>
+                                {item.name}
                               </p>
-                            )}
+                              {(item.color || item.size) && (
+                                <span className='inline-block mt-1.5 text-xs text-muted-foreground bg-muted/60 rounded-full px-2 py-0.5'>
+                                  {[item.color, item.size].filter(Boolean).join(' / ')}
+                                </span>
+                              )}
+                              <p className='text-xs text-muted-foreground mt-2'>
+                                ${unitPrice.toFixed(2)} each
+                              </p>
+                            </div>
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <div className='flex justify-center'>
+                            <div className='flex items-center rounded-full border bg-muted/20 overflow-hidden'>
+                              <RemoveButton item={item} />
+                              <span className='w-8 text-center text-sm font-medium tabular-nums'>
+                                {item.qty}
+                              </span>
+                              <AddButton item={item} />
+                            </div>
                           </div>
-                        </Link>
-                      </TableCell>
-                      <TableCell className='flex-center gap-2'>
-                        <RemoveButton item={item} />
-                        <span>{item.qty}</span>
-                        <AddButton item={item} />
-                      </TableCell>
-                      <TableCell className='text-right'>${item.price}</TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell className='text-right px-4 font-semibold text-base whitespace-nowrap'>
+                          ${lineTotal.toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
-  
+
             <div>
               <OrderSummarySidebar cart={cart} />
             </div>
