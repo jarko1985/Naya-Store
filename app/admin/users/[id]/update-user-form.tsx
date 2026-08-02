@@ -59,7 +59,7 @@ const UpdateUserForm = ({
 
   return (
     <Form {...form}>
-      <form method='POST' onSubmit={form.handleSubmit(onSubmit)}>
+      <form method='POST' onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         {/* Email */}
         <div>
           <FormField

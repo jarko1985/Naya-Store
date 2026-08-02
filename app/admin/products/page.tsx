@@ -38,11 +38,11 @@ const AdminProductsPage = async (props: {
 
   return (
     <div className='space-y-2'>
-      <div className='flex-between'>
-        <div className='flex items-center gap-3'>
-          <h1 className='h2-bold'>Products</h1>
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='flex flex-wrap items-center gap-3'>
+          <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold'>Products</h1>
           {searchText && (
-            <div>
+            <div className='text-sm'>
               Filtered by <i>&quot;{searchText}&quot;</i>{' '}
               <Link href='/admin/products'>
                 <Button variant='outline' size='sm'>
@@ -52,7 +52,7 @@ const AdminProductsPage = async (props: {
             </div>
           )}
         </div>
-        <Button asChild variant='default'>
+        <Button asChild variant='default' className='w-full sm:w-auto'>
           <Link href='/admin/products/create'>Create Product</Link>
         </Button>
       </div>
@@ -60,26 +60,28 @@ const AdminProductsPage = async (props: {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>ID</TableHead>
+            <TableHead className='hidden sm:table-cell'>ID</TableHead>
             <TableHead>NAME</TableHead>
             <TableHead className='text-right'>PRICE</TableHead>
-            <TableHead>CATEGORY</TableHead>
-            <TableHead>STOCK</TableHead>
-            <TableHead>RATING</TableHead>
+            <TableHead className='hidden sm:table-cell'>CATEGORY</TableHead>
+            <TableHead className='hidden md:table-cell'>STOCK</TableHead>
+            <TableHead className='hidden lg:table-cell'>RATING</TableHead>
             <TableHead className='w-[100px]'>ACTIONS</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {products.data.map((product: Product) => (
             <TableRow key={product.id}>
-              <TableCell>{formatId(product.id)}</TableCell>
-              <TableCell>{product.name}</TableCell>
+              <TableCell className='hidden sm:table-cell'>{formatId(product.id)}</TableCell>
+              <TableCell className='max-w-40 truncate sm:max-w-none sm:whitespace-nowrap'>
+                {product.name}
+              </TableCell>
               <TableCell className='text-right'>
                 {formatCurrency(product.price)}
               </TableCell>
-              <TableCell>{product.category}</TableCell>
-              <TableCell>{product.stock}</TableCell>
-              <TableCell>{product.rating}</TableCell>
+              <TableCell className='hidden sm:table-cell'>{product.category}</TableCell>
+              <TableCell className='hidden md:table-cell'>{product.stock}</TableCell>
+              <TableCell className='hidden lg:table-cell'>{product.rating}</TableCell>
               <TableCell className='flex gap-1'>
                 <Button asChild variant='outline' size='sm'>
                   <Link href={`/admin/products/${product.id}`}>Edit</Link>

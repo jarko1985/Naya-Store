@@ -29,9 +29,9 @@ const AdminCategoriesPage = async () => {
   return (
     <div className='space-y-4'>
       {/* Header */}
-      <div className='flex-between'>
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         <div>
-          <h1 className='h2-bold'>Categories</h1>
+          <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold'>Categories</h1>
           <p className='text-sm text-muted-foreground mt-1'>
             Upload an image for each category to display on the storefront.
             Categories are automatically derived from your products.

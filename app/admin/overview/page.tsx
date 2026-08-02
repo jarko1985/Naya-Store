@@ -26,15 +26,15 @@ import {
   
     return (
       <div className='space-y-2'>
-        <h1 className='h2-bold'>Dashboard</h1>
-        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
+        <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold'>Dashboard</h1>
+        <div className='grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4'>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>Total Revenue</CardTitle>
-              <BadgeDollarSign />
+              <CardTitle className='text-xs sm:text-sm font-medium'>Total Revenue</CardTitle>
+              <BadgeDollarSign className='size-4 sm:size-5' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>
+              <div className='text-lg sm:text-2xl font-bold'>
                 {formatCurrency(
                   summary.totalSales._sum.totalPrice?.toString() || 0
                 )}
@@ -43,44 +43,44 @@ import {
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>Sales</CardTitle>
-              <CreditCard />
+              <CardTitle className='text-xs sm:text-sm font-medium'>Sales</CardTitle>
+              <CreditCard className='size-4 sm:size-5' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>
+              <div className='text-lg sm:text-2xl font-bold'>
                 {formatNumber(summary.ordersCount)}
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>Customers</CardTitle>
-              <Users />
+              <CardTitle className='text-xs sm:text-sm font-medium'>Customers</CardTitle>
+              <Users className='size-4 sm:size-5' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>
+              <div className='text-lg sm:text-2xl font-bold'>
                 {formatNumber(summary.usersCount)}
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>Products</CardTitle>
-              <Barcode />
+              <CardTitle className='text-xs sm:text-sm font-medium'>Products</CardTitle>
+              <Barcode className='size-4 sm:size-5' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>
+              <div className='text-lg sm:text-2xl font-bold'>
                 {formatNumber(summary.productsCount)}
               </div>
             </CardContent>
           </Card>
         </div>
-        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-7'>
-          <Card className='col-span-4'>
+        <div className='grid gap-4 lg:grid-cols-7'>
+          <Card className='lg:col-span-4'>
             <CardHeader>
               <CardTitle>Overview</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className='px-2 sm:px-6'>
               <Charts
                 data={{
                   salesData: summary.salesData,
@@ -88,7 +88,7 @@ import {
               />
             </CardContent>
           </Card>
-          <Card className='col-span-3'>
+          <Card className='lg:col-span-3'>
             <CardHeader>
               <CardTitle>Recent Sales</CardTitle>
             </CardHeader>
@@ -97,7 +97,7 @@ import {
                 <TableHeader>
                   <TableRow>
                     <TableHead>BUYER</TableHead>
-                    <TableHead>DATE</TableHead>
+                    <TableHead className='hidden sm:table-cell'>DATE</TableHead>
                     <TableHead>TOTAL</TableHead>
                     <TableHead>ACTIONS</TableHead>
                   </TableRow>
@@ -108,7 +108,7 @@ import {
                       <TableCell>
                         {order?.user?.name ? order.user.name : 'Deleted User'}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className='hidden sm:table-cell'>
                         {formatDateTime(order.createdAt).dateOnly}
                       </TableCell>
                       <TableCell>{formatCurrency(order.totalPrice)}</TableCell>

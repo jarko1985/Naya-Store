@@ -13,25 +13,26 @@ export default function AdminLayout({
   return (
     <>
       <div className='flex flex-col'>
-        <div className='border-b container mx-auto'>
-          <div className='flex items-center h-16 px-4'>
-            <Link href='/' className='w-22'>
+        <div className='border-b'>
+          <div className='container mx-auto flex items-center gap-3 h-16 px-3 sm:px-4'>
+            <Link href='/' className='w-10 shrink-0'>
               <Image
                 src='/images/logo.svg'
-                height={48}
-                width={48}
+                height={40}
+                width={40}
                 alt={APP_NAME}
+                className='h-8 w-8 sm:h-10 sm:w-10'
               />
             </Link>
-            <MainNav className='mx-6' />
-            <div className='ml-auto items-center flex space-x-4'>
+            <MainNav className='shrink-0' />
+            <div className='ml-auto flex items-center gap-2 sm:gap-4 min-w-0'>
               <AdminSearch />
               <Menu />
             </div>
           </div>
         </div>
 
-        <div className='flex-1 space-y-4 p-8 pt-6 container mx-auto'>
+        <div className='flex-1 space-y-4 p-3 sm:p-6 lg:p-8 lg:pt-6 container mx-auto'>
           {children}
         </div>
       </div>

@@ -136,14 +136,14 @@ const ProductForm = ({
       <form method='POST' onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
 
         {/* ── Section 1: Basic Info ── */}
-        <Card>
-          <CardHeader className='pb-3'>
+        <Card className='py-4 sm:py-6'>
+          <CardHeader className='pb-3 px-4 sm:px-6'>
             <CardTitle className='flex items-center gap-2 text-base'>
               <Tag className='w-4 h-4 text-primary' />
               Basic Information
             </CardTitle>
           </CardHeader>
-          <CardContent className='space-y-4'>
+          <CardContent className='space-y-4 px-4 sm:px-6'>
             {/* Name */}
             <FormField
               control={form.control}
@@ -341,14 +341,14 @@ const ProductForm = ({
         </Card>
 
         {/* ── Section 2: Pricing & Inventory ── */}
-        <Card>
-          <CardHeader className='pb-3'>
+        <Card className='py-4 sm:py-6'>
+          <CardHeader className='pb-3 px-4 sm:px-6'>
             <CardTitle className='flex items-center gap-2 text-base'>
               <DollarSign className='w-4 h-4 text-primary' />
               Pricing & Inventory
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className='px-4 sm:px-6'>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
               <FormField
                 control={form.control}
@@ -400,14 +400,14 @@ const ProductForm = ({
         </Card>
 
         {/* ── Section 3: Product Images ── */}
-        <Card>
-          <CardHeader className='pb-3'>
+        <Card className='py-4 sm:py-6'>
+          <CardHeader className='pb-3 px-4 sm:px-6'>
             <CardTitle className='flex items-center gap-2 text-base'>
               <ImagePlus className='w-4 h-4 text-primary' />
               Product Images
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className='px-4 sm:px-6'>
             <FormField
               control={form.control}
               name='images'
@@ -468,14 +468,14 @@ const ProductForm = ({
         </Card>
 
         {/* ── Section 4: Featured Product ── */}
-        <Card>
-          <CardHeader className='pb-3'>
+        <Card className='py-4 sm:py-6'>
+          <CardHeader className='pb-3 px-4 sm:px-6'>
             <CardTitle className='flex items-center gap-2 text-base'>
               <Star className='w-4 h-4 text-primary' />
               Featured Product
             </CardTitle>
           </CardHeader>
-          <CardContent className='space-y-4'>
+          <CardContent className='space-y-4 px-4 sm:px-6'>
             <FormField
               control={form.control}
               name='isFeatured'
@@ -541,14 +541,14 @@ const ProductForm = ({
         </Card>
 
         {/* ── Section 5: Description ── */}
-        <Card>
-          <CardHeader className='pb-3'>
+        <Card className='py-4 sm:py-6'>
+          <CardHeader className='pb-3 px-4 sm:px-6'>
             <CardTitle className='flex items-center gap-2 text-base'>
               <FileText className='w-4 h-4 text-primary' />
               Description
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className='px-4 sm:px-6'>
             <FormField
               control={form.control}
               name='description'
@@ -570,23 +570,23 @@ const ProductForm = ({
 
         {/* ── Section 6: Variants (Create only) ── */}
         {type === 'Create' && (
-          <Card>
-            <CardHeader className='pb-3'>
+          <Card className='py-4 sm:py-6'>
+            <CardHeader className='pb-3 px-4 sm:px-6'>
               <CardTitle className='flex items-center gap-2 text-base'>
                 <Layers className='w-4 h-4 text-primary' />
                 Product Variants
                 <Badge variant='secondary' className='ml-1 font-normal text-xs'>Optional</Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent className='space-y-4'>
+            <CardContent className='space-y-4 px-4 sm:px-6'>
               <p className='text-sm text-muted-foreground'>
                 Add size/color variants now, or after saving. Each variant has its own price, stock, and image.
               </p>
 
               {/* Pending variants list */}
               {pendingVariants.length > 0 && (
-                <div className='rounded-lg border overflow-hidden'>
-                  <table className='w-full text-sm'>
+                <div className='rounded-lg border overflow-x-auto'>
+                  <table className='w-full text-sm min-w-130'>
                     <thead className='bg-muted/50'>
                       <tr>
                         <th className='text-left px-3 py-2 font-medium text-muted-foreground'>Image</th>
@@ -644,7 +644,7 @@ const ProductForm = ({
               {/* Add variant form */}
               <div className='rounded-lg border bg-muted/20 p-4 space-y-4'>
                 <p className='text-sm font-medium'>Add a variant</p>
-                <div className='grid grid-cols-2 gap-3'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                   <div className='space-y-1.5'>
                     <label className='text-xs font-medium text-muted-foreground uppercase tracking-wide'>Color</label>
                     <Select

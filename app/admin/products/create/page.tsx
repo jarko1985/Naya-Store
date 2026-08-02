@@ -14,9 +14,9 @@ const CreateProductPage = async () => {
 
   return (
     <div className='max-w-5xl mx-auto'>
-      <div className='mb-8'>
-        <h1 className='text-3xl font-bold tracking-tight'>Create Product</h1>
-        <p className='text-muted-foreground mt-1'>Add a new product to your store</p>
+      <div className='mb-6 sm:mb-8'>
+        <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight'>Create Product</h1>
+        <p className='text-sm sm:text-base text-muted-foreground mt-1'>Add a new product to your store</p>
       </div>
       <ProductForm type='Create' categories={categories} />
     </div>

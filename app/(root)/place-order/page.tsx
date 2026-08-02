@@ -114,7 +114,7 @@ const PlaceOrderPage = async () => {
                     <TableBody>
                       {cart.items.map((item) => (
                         <TableRow key={`${item.slug}-${item.variantId ?? 'base'}`}>
-                          <TableCell>
+                          <TableCell className='max-w-[220px]'>
                             <Link
                               href={`/product/${item.slug}`}
                               className='flex items-center'
@@ -122,14 +122,16 @@ const PlaceOrderPage = async () => {
                               <Image
                                 src={item.image}
                                 alt={item.name}
-                                width={44}
-                                height={44}
-                                className='rounded-md border object-cover'
+                                width={64}
+                                height={64}
+                                className='rounded-md border object-cover shrink-0'
                               />
-                              <div className='px-3'>
-                                <p className='text-sm'>{item.name}</p>
+                              <div className='px-3 min-w-0'>
+                                <p className='text-sm line-clamp-2 break-words'>
+                                  {item.name}
+                                </p>
                                 {(item.color || item.size) && (
-                                  <p className='text-xs text-muted-foreground'>
+                                  <p className='text-xs text-muted-foreground truncate'>
                                     {[item.color, item.size].filter(Boolean).join(' / ')}
                                   </p>
                                 )}

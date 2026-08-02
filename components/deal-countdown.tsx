@@ -1,12 +1,13 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Button } from './ui/button';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import Link from "next/link";
+import { Button } from "./ui/button";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import Counter from "./Counter";
 
 // Static target date (replace with desired date)
-const TARGET_DATE = new Date('2026-03-20T00:00:00');
+const TARGET_DATE = new Date("2026-09-20T00:00:00");
 
 // Function to calculate the time remaining
 const calculateTimeRemaining = (targetDate: Date) => {
@@ -15,7 +16,7 @@ const calculateTimeRemaining = (targetDate: Date) => {
   return {
     days: Math.floor(timeDifference / (1000 * 60 * 60 * 24)),
     hours: Math.floor(
-      (timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      (timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
     ),
     minutes: Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60)),
     seconds: Math.floor((timeDifference % (1000 * 60)) / 1000),
@@ -48,9 +49,9 @@ const DealCountdown = () => {
 
   if (!time) {
     return (
-      <section className='grid grid-cols-1 md:grid-cols-2 my-20 rounded-2xl border bg-card shadow-sm p-8'>
-        <div className='flex flex-col gap-2 justify-center'>
-          <h3 className='text-3xl font-bold'>Loading Countdown...</h3>
+      <section className="grid grid-cols-1 md:grid-cols-2 my-20 rounded-2xl border bg-card shadow-sm p-8">
+        <div className="flex flex-col gap-2 justify-center">
+          <h3 className="text-3xl font-bold">Loading Countdown...</h3>
         </div>
       </section>
     );
@@ -63,26 +64,26 @@ const DealCountdown = () => {
     time.seconds === 0
   ) {
     return (
-      <section className='grid grid-cols-1 md:grid-cols-2 my-20 rounded-2xl border bg-card shadow-sm p-8 gap-6'>
-        <div className='flex flex-col gap-2 justify-center'>
-          <h3 className='text-3xl font-bold'>Deal Has Ended</h3>
+      <section className="grid grid-cols-1 md:grid-cols-2 my-20 rounded-2xl border bg-card shadow-sm p-8 gap-6">
+        <div className="flex flex-col gap-2 justify-center">
+          <h3 className="text-3xl font-bold">Deal Has Ended</h3>
           <p>
             This deal is no longer available. Check out our latest promotions!
           </p>
 
-          <div className='text-center'>
+          <div className="text-center">
             <Button asChild>
-              <Link href='/search'>View Products</Link>
+              <Link href="/search">View Products</Link>
             </Button>
           </div>
         </div>
-        <div className='flex justify-center'>
+        <div className="flex justify-center">
           <Image
-            src='/images/promo.jpg'
-            alt='promotion'
+            src="/images/promo.jpg"
+            alt="promotion"
             width={300}
             height={200}
-            className='rounded-xl border shadow-sm'
+            className="rounded-xl border shadow-sm"
           />
         </div>
       </section>
@@ -90,34 +91,34 @@ const DealCountdown = () => {
   }
 
   return (
-    <section className='grid grid-cols-1 md:grid-cols-2 my-20 rounded-2xl border bg-card shadow-sm p-8 gap-6'>
-      <div className='flex flex-col gap-2 justify-center'>
-        <h3 className='text-3xl font-bold'>Deal Of The Month</h3>
+    <section className="grid grid-cols-1 md:grid-cols-2 my-20 rounded-2xl border bg-card shadow-sm p-8 gap-6">
+      <div className="flex flex-col gap-2 justify-center">
+        <h3 className="text-3xl font-bold">Deal Of The Month</h3>
         <p>
           Get ready for a shopping experience like never before with our Deals
           of the Month! Every purchase comes with exclusive perks and offers,
           making this month a celebration of savvy choices and amazing deals.
           Don&apos;t miss out! 🎁🛒
         </p>
-        <ul className='grid grid-cols-4 gap-2 my-2'>
-          <StatBox label='Days' value={time.days} />
-          <StatBox label='Hours' value={time.hours} />
-          <StatBox label='Minutes' value={time.minutes} />
-          <StatBox label='Seconds' value={time.seconds} />
+        <ul className="grid grid-cols-4 gap-2 my-2">
+          <StatBox label="Days" value={time.days} />
+          <StatBox label="Hours" value={time.hours} />
+          <StatBox label="Minutes" value={time.minutes} />
+          <StatBox label="Seconds" value={time.seconds} />
         </ul>
-        <div className='text-center'>
+        <div className="text-center flex">
           <Button asChild>
-            <Link href='/search'>View Products</Link>
+            <Link href="/search">View Products</Link>
           </Button>
         </div>
       </div>
-      <div className='flex justify-center items-center'>
+      <div className="flex justify-center items-center">
         <Image
-          src='/images/promo.jpg'
-          alt='promotion'
+          src="/images/promo.jpg"
+          alt="promotion"
           width={300}
           height={200}
-          className='rounded-xl border shadow-sm'
+          className="rounded-xl"
         />
       </div>
     </section>
@@ -125,9 +126,17 @@ const DealCountdown = () => {
 };
 
 const StatBox = ({ label, value }: { label: string; value: number }) => (
-  <li className='p-3 w-full text-center rounded-xl border bg-background shadow-sm'>
-    <p className='text-3xl font-bold tabular-nums'>{value}</p>
-    <p className='text-xs text-muted-foreground uppercase tracking-wide'>{label}</p>
+  <li className="p-3 w-full text-center rounded-xl border bg-background shadow-sm">
+    <div className="flex justify-center">
+      <Counter
+        value={value}
+        places={value >= 100 ? [100, 10, 1] : [10, 1]}
+        fontSize={30}
+      />
+    </div>
+    <p className="text-xs text-muted-foreground uppercase tracking-wide">
+      {label}
+    </p>
   </li>
 );
 

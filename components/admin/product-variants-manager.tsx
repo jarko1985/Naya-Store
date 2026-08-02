@@ -92,15 +92,15 @@ const ProductVariantsManager = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className='py-4 sm:py-6'>
+      <CardHeader className='px-4 sm:px-6'>
         <CardTitle>Product Variants</CardTitle>
       </CardHeader>
-      <CardContent className='space-y-6'>
+      <CardContent className='space-y-6 px-4 sm:px-6'>
         {/* Existing variants table */}
         {variants.length > 0 && (
           <div className='overflow-x-auto'>
-            <table className='w-full text-sm'>
+            <table className='w-full text-sm min-w-130'>
               <thead>
                 <tr className='border-b'>
                   <th className='text-left pb-2'>Image</th>
@@ -156,7 +156,7 @@ const ProductVariantsManager = ({
         {/* Add variant form */}
         <div className='border rounded-lg p-4 space-y-4'>
           <p className='font-medium text-sm'>Add New Variant</p>
-          <div className='grid grid-cols-2 gap-3'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
             {/* Color */}
             <div className='space-y-1'>
               <label className='text-sm font-medium'>Color</label>

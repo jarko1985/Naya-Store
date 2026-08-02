@@ -20,19 +20,21 @@ const AdminCouponsPage = async () => {
 
   return (
     <div className='space-y-4'>
-      <div className='flex-between'>
-        <h1 className='h2-bold'>Coupons</h1>
-        <CouponFormDialog />
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+        <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold'>Coupons</h1>
+        <div className='sm:shrink-0'>
+          <CouponFormDialog />
+        </div>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>ID</TableHead>
+            <TableHead className='hidden sm:table-cell'>ID</TableHead>
             <TableHead>CODE</TableHead>
             <TableHead>DISCOUNT</TableHead>
-            <TableHead>USES</TableHead>
-            <TableHead>WINDOW</TableHead>
+            <TableHead className='hidden sm:table-cell'>USES</TableHead>
+            <TableHead className='hidden md:table-cell'>WINDOW</TableHead>
             <TableHead>STATUS</TableHead>
             <TableHead className='w-[110px]'>ACTIONS</TableHead>
           </TableRow>
@@ -47,16 +49,16 @@ const AdminCouponsPage = async () => {
           )}
           {coupons.map((coupon) => (
             <TableRow key={coupon.id}>
-              <TableCell>{formatId(coupon.id)}</TableCell>
+              <TableCell className='hidden sm:table-cell'>{formatId(coupon.id)}</TableCell>
               <TableCell className='font-mono font-medium'>{coupon.code}</TableCell>
               <TableCell>
                 {coupon.type === 'percent' ? `${coupon.value}% off` : `$${coupon.value} off`}
               </TableCell>
-              <TableCell>
+              <TableCell className='hidden sm:table-cell'>
                 {coupon.usedCount}
                 {coupon.maxUses ? ` / ${coupon.maxUses}` : ''}
               </TableCell>
-              <TableCell className='text-xs text-muted-foreground'>
+              <TableCell className='hidden md:table-cell text-xs text-muted-foreground'>
                 {coupon.startsAt ? formatDateTime(new Date(coupon.startsAt)).dateOnly : 'Any time'}
                 {' – '}
                 {coupon.expiresAt ? formatDateTime(new Date(coupon.expiresAt)).dateOnly : 'No expiry'}

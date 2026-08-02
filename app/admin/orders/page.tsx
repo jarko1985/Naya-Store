@@ -33,10 +33,10 @@ import {
   
     return (
       <div className='space-y-2'>
-        <div className='flex items-center gap-3'>
-          <h1 className='h2-bold'>Orders</h1>
+        <div className='flex flex-wrap items-center gap-3'>
+          <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold'>Orders</h1>
           {searchText && (
-            <div>
+            <div className='text-sm'>
               Filtered by <i>&quot;{searchText}&quot;</i>{' '}
               <Link href='/admin/orders'>
                 <Button variant='outline' size='sm'>
@@ -46,55 +46,53 @@ import {
             </div>
           )}
         </div>
-        <div className='overflow-x-auto'>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>DATE</TableHead>
-                <TableHead>BUYER</TableHead>
-                <TableHead>TOTAL</TableHead>
-                <TableHead>PAID</TableHead>
-                <TableHead>DELIVERED</TableHead>
-                <TableHead>ACTIONS</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className='hidden sm:table-cell'>ID</TableHead>
+              <TableHead>DATE</TableHead>
+              <TableHead>BUYER</TableHead>
+              <TableHead>TOTAL</TableHead>
+              <TableHead className='hidden md:table-cell'>PAID</TableHead>
+              <TableHead className='hidden md:table-cell'>DELIVERED</TableHead>
+              <TableHead>ACTIONS</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders.data.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell className='hidden sm:table-cell'>{formatId(order.id)}</TableCell>
+                <TableCell>
+                  {formatDateTime(order.createdAt).dateTime}
+                </TableCell>
+                <TableCell>{order.user.name}</TableCell>
+                <TableCell>{formatCurrency(order.totalPrice)}</TableCell>
+                <TableCell className='hidden md:table-cell'>
+                  {order.isPaid && order.paidAt
+                    ? formatDateTime(order.paidAt).dateTime
+                    : 'Not Paid'}
+                </TableCell>
+                <TableCell className='hidden md:table-cell'>
+                  {order.isDelivered && order.deliveredAt
+                    ? formatDateTime(order.deliveredAt).dateTime
+                    : 'Not Delivered'}
+                </TableCell>
+                <TableCell className='flex gap-1'>
+                  <Button asChild variant='outline' size='sm'>
+                    <Link href={`/order/${order.id}`}>Details</Link>
+                  </Button>
+                  <DeleteDialog id={order.id} action={deleteOrder} />
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orders.data.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>{formatId(order.id)}</TableCell>
-                  <TableCell>
-                    {formatDateTime(order.createdAt).dateTime}
-                  </TableCell>
-                  <TableCell>{order.user.name}</TableCell>
-                  <TableCell>{formatCurrency(order.totalPrice)}</TableCell>
-                  <TableCell>
-                    {order.isPaid && order.paidAt
-                      ? formatDateTime(order.paidAt).dateTime
-                      : 'Not Paid'}
-                  </TableCell>
-                  <TableCell>
-                    {order.isDelivered && order.deliveredAt
-                      ? formatDateTime(order.deliveredAt).dateTime
-                      : 'Not Delivered'}
-                  </TableCell>
-                  <TableCell>
-                    <Button asChild variant='outline' size='sm'>
-                      <Link href={`/order/${order.id}`}>Details</Link>
-                    </Button>
-                    <DeleteDialog id={order.id} action={deleteOrder} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {orders.totalPages > 1 && (
-            <Pagination
-              page={Number(page) || 1}
-              totalPages={orders?.totalPages}
-            />
-          )}
-        </div>
+            ))}
+          </TableBody>
+        </Table>
+        {orders.totalPages > 1 && (
+          <Pagination
+            page={Number(page) || 1}
+            totalPages={orders?.totalPages}
+          />
+        )}
       </div>
     );
   };

@@ -29,8 +29,8 @@ const AdminProductUpdatePage = async (props: {
   const categories = rawCategories.map((c) => c.category);
 
   return (
-    <div className='space-y-8 max-w-5xl mx-auto'>
-      <h1 className='h2-bold'>Update Product</h1>
+    <div className='space-y-6 sm:space-y-8 max-w-5xl mx-auto'>
+      <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold'>Update Product</h1>
 
       <ProductForm type='Update' product={product as unknown as Product} productId={product.id} categories={categories} />
 

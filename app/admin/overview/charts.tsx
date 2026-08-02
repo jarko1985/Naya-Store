@@ -7,20 +7,22 @@ const Charts = ({
   data: { salesData: { month: string; totalSales: number }[] };
 }) => {
   return (
-    <ResponsiveContainer width='100%' height={350}>
+    <ResponsiveContainer width='100%' height={300} minWidth={0}>
       <BarChart data={salesData}>
         <XAxis
           dataKey='month'
           stroke='#888888'
-          fontSize={12}
+          fontSize={11}
           tickLine={false}
           axisLine={false}
+          interval='preserveStartEnd'
         />
         <YAxis
           stroke='#888888'
-          fontSize={12}
+          fontSize={11}
           tickLine={false}
           axisLine={false}
+          width={40}
           tickFormatter={(value) => `$${value}`}
         />
         <Bar

@@ -34,10 +34,10 @@ const AdminUserPage = async (props: {
 
   return (
     <div className='space-y-2'>
-      <div className='flex items-center gap-3'>
-        <h1 className='h2-bold'>Users</h1>
+      <div className='flex flex-wrap items-center gap-3'>
+        <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold'>Users</h1>
         {searchText && (
-          <div>
+          <div className='text-sm'>
             Filtered by <i>&quot;{searchText}&quot;</i>{' '}
             <Link href='/admin/users'>
               <Button variant='outline' size='sm'>
@@ -47,44 +47,44 @@ const AdminUserPage = async (props: {
           </div>
         )}
       </div>
-      <div className='overflow-x-auto'>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>NAME</TableHead>
-              <TableHead>EMAIL</TableHead>
-              <TableHead>ROLE</TableHead>
-              <TableHead>ACTIONS</TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className='hidden sm:table-cell'>ID</TableHead>
+            <TableHead>NAME</TableHead>
+            <TableHead className='hidden sm:table-cell'>EMAIL</TableHead>
+            <TableHead>ROLE</TableHead>
+            <TableHead>ACTIONS</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {users.data.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell className='hidden sm:table-cell'>{formatId(user.id)}</TableCell>
+              <TableCell className='max-w-32 truncate sm:max-w-none sm:whitespace-nowrap'>
+                {user.name}
+              </TableCell>
+              <TableCell className='hidden sm:table-cell'>{user.email}</TableCell>
+              <TableCell>
+                {user.role === 'user' ? (
+                  <Badge variant='secondary'>User</Badge>
+                ) : (
+                  <Badge variant='default'>Admin</Badge>
+                )}
+              </TableCell>
+              <TableCell className='flex gap-1'>
+                <Button asChild variant='outline' size='sm'>
+                  <Link href={`/admin/users/${user.id}`}>Edit</Link>
+                </Button>
+                <DeleteDialog id={user.id} action={deleteUser} />
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.data.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{formatId(user.id)}</TableCell>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  {user.role === 'user' ? (
-                    <Badge variant='secondary'>User</Badge>
-                  ) : (
-                    <Badge variant='default'>Admin</Badge>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Button asChild variant='outline' size='sm'>
-                    <Link href={`/admin/users/${user.id}`}>Edit</Link>
-                  </Button>
-                  <DeleteDialog id={user.id} action={deleteUser} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        {users.totalPages > 1 && (
-          <Pagination page={Number(page) || 1} totalPages={users?.totalPages} />
-        )}
-      </div>
+          ))}
+        </TableBody>
+      </Table>
+      {users.totalPages > 1 && (
+        <Pagination page={Number(page) || 1} totalPages={users?.totalPages} />
+      )}
     </div>
   );
 };
