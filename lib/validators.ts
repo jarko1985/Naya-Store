@@ -83,6 +83,7 @@ export const signUpFormSchema = z
   });
 
   export const shippingAddressSchema = z.object({
+    email: z.string().email('Enter a valid email').optional(),
     fullName: z.string().min(3, 'Name must be at least 3 characters'),
     streetAddress: z.string().min(3, 'Address must be at least 3 characters'),
     city: z.string().min(3, 'City must be at least 3 characters'),

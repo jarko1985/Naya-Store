@@ -45,7 +45,7 @@ const promotions: Promotion[] = [
 
 const StorePromotionsSection = () => {
   return (
-    <section className="relative mb-12">
+    <section className="relative mb-12 opacity-85">
       <div className="text-center mb-4">
         <h2 className="text-2xl md:text-3xl font-bold">Why Shop With Us</h2>
         <p className="text-sm text-muted-foreground mt-2">

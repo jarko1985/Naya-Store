@@ -53,6 +53,7 @@ model User {
   emailVerified DateTime? @db.Timestamp(6)
   image         String?
   password      String?
+  isGuest       Boolean   @default(false)
   role          String    @default("user")
   address       Json?     @db.Json
   paymentMethod String?

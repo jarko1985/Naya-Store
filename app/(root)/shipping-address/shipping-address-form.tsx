@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight, Loader, MapPin, User2, Home, Hash, Globe2, Lock } from 'lucide-react';
+import { ArrowRight, Loader, MapPin, User2, Home, Hash, Globe2, Lock, Mail } from 'lucide-react';
 import { updateUserAddress } from '@/lib/actions/user.actions';
 import { shippingAddressDefaultValues } from '@/lib/constants';
 
@@ -33,7 +33,13 @@ const IconInput = ({
   </div>
 );
 
-const ShippingAddressForm = ({ address }: { address: ShippingAddress }) => {
+const ShippingAddressForm = ({
+  address,
+  isGuest = false,
+}: {
+  address: ShippingAddress;
+  isGuest?: boolean;
+}) => {
   const router = useRouter();
 
   const form = useForm<z.infer<typeof shippingAddressSchema>>({
@@ -46,6 +52,11 @@ const ShippingAddressForm = ({ address }: { address: ShippingAddress }) => {
   const onSubmit: SubmitHandler<z.infer<typeof shippingAddressSchema>> = async (
     values
   ) => {
+    if (isGuest && !values.email) {
+      form.setError('email', { message: 'Email is required' });
+      return;
+    }
+
     startTransition(async () => {
       const res = await updateUserAddress(values);
 
@@ -77,6 +88,35 @@ const ShippingAddressForm = ({ address }: { address: ShippingAddress }) => {
             className='space-y-5'
             onSubmit={form.handleSubmit(onSubmit)}
           >
+            {isGuest && (
+              <FormField
+                control={form.control}
+                name='email'
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<
+                    z.infer<typeof shippingAddressSchema>,
+                    'email'
+                  >;
+                }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <IconInput
+                        icon={Mail}
+                        type='email'
+                        placeholder='Enter your email'
+                        {...field}
+                        value={field.value ?? ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={form.control}
               name='fullName'

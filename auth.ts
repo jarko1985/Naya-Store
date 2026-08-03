@@ -16,10 +16,26 @@ const prismaAdapter = PrismaAdapter(prisma);
 const customAdapter = {
   ...prismaAdapter,
   createUser: async ({ id: _id, ...data }: Parameters<NonNullable<typeof prismaAdapter.createUser>>[0]) => {
+    const email = data.email ?? randomUUID();
+
+    // If a guest checkout already created a row for this email, claim it
+    // instead of hitting the unique-email constraint on create.
+    const existingGuest = await prisma.user.findFirst({ where: { email, isGuest: true } });
+    if (existingGuest) {
+      return prisma.user.update({
+        where: { id: existingGuest.id },
+        data: {
+          name: data.name ?? existingGuest.name,
+          image: data.image ?? existingGuest.image,
+          isGuest: false,
+        },
+      });
+    }
+
     return prisma.user.create({
       data: {
         ...data,
-        email: data.email ?? randomUUID(),
+        email,
         name: data.name ?? undefined,
       },
     });
@@ -74,6 +90,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
         // If user does not exist or password does not match return null
         return null;
+      },
+    }),
+    CredentialsProvider({
+      id: 'guest-checkout',
+      name: 'Guest Checkout',
+      credentials: {
+        email: { type: 'email' },
+      },
+      async authorize(credentials) {
+        if (credentials?.email == null) return null;
+
+        const email = (credentials.email as string).trim().toLowerCase();
+
+        const user = await prisma.user.findFirst({
+          where: { email },
+        });
+
+        // Only ever authenticate an existing guest row here — never a real
+        // account — since this provider takes no password.
+        if (!user || !user.isGuest) return null;
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        };
       },
     }),
   ],

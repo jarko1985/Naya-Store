@@ -7,6 +7,7 @@ import { ShippingAddress } from '@/types';
 import ShippingAddressForm from './shipping-address-form';
 import CheckoutSteps from '@/components/shared/checkout-steps';
 import CheckoutOrderSummary from '@/components/shared/checkout/checkout-order-summary';
+import { shippingAddressDefaultValues } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Shipping Address',
@@ -18,19 +19,18 @@ const ShippingAddressPage = async () => {
   if (!cart || cart.items.length === 0) redirect('/cart');
 
   const session = await auth();
-
   const userId = session?.user?.id;
-
-  if (!userId) throw new Error('No user ID');
-
-  const user = await getUserById(userId);
+  const user = userId ? await getUserById(userId) : null;
 
   return (
     <>
       <CheckoutSteps current={1} />
       <div className='grid md:grid-cols-3 gap-6 max-w-5xl mx-auto'>
         <div className='md:col-span-2'>
-          <ShippingAddressForm address={user.address as ShippingAddress} />
+          <ShippingAddressForm
+            address={(user?.address as ShippingAddress) ?? shippingAddressDefaultValues}
+            isGuest={!user}
+          />
         </div>
         <div>
           <CheckoutOrderSummary cart={cart} />

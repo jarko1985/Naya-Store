@@ -159,7 +159,7 @@ const EditorialFashionHero = ({
         }
       }}
       style={heroStyle}
-      className={`relative mb-12 w-full overflow-hidden rounded-2xl bg-[var(--hero-bg)] text-[var(--hero-fg)] transition-colors duration-700 h-[72svh] min-h-[480px] max-h-[780px] md:h-[clamp(760px,88vh,980px)] md:min-h-[680px] md:max-h-[980px] lg:min-h-[760px] ${className ?? ""}`.trim()}
+      className={`opacity-85 relative mb-12 w-full overflow-hidden rounded-2xl bg-[var(--hero-bg)] text-[var(--hero-fg)] transition-colors duration-700 h-[72svh] min-h-[480px] max-h-[780px] md:h-[clamp(760px,88vh,980px)] md:min-h-[680px] md:max-h-[980px] lg:min-h-[760px] ${className ?? ""}`.trim()}
     >
       <p className="sr-only" aria-live="polite">
         {`Slide ${selectedIndex + 1} of ${slides.length}: ${activeSlide.eyebrow}`}

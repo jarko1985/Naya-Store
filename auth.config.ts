@@ -15,7 +15,9 @@ export const authConfig: NextAuthConfig = {
   callbacks: {
     authorized({ request, auth }) {
       const protectedPaths = [
-       /\/shipping-address/,
+       // /shipping-address is intentionally not gated here — guest checkout
+       // needs to reach it unauthenticated; the page itself establishes a
+       // guest session before the next checkout step.
        /\/payment-method/,
        /\/place-order/,
        /\/profile/,

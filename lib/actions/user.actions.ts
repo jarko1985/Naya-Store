@@ -46,13 +46,25 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
 
     user.password = hashSync(user.password, 10);
 
-    await prisma.user.create({
-      data: {
-        name: user.name,
-        email: user.email,
-        password: user.password,
-      },
-    });
+    const existing = await prisma.user.findFirst({ where: { email: user.email } });
+
+    if (existing?.isGuest) {
+      // Claim the guest row created during a previous guest checkout.
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: { name: user.name, password: user.password, isGuest: false },
+      });
+    } else if (existing) {
+      return { success: false, message: 'An account with this email already exists.' };
+    } else {
+      await prisma.user.create({
+        data: {
+          name: user.name,
+          email: user.email,
+          password: user.password,
+        },
+      });
+    }
 
     await signIn('credentials', {
       email: user.email,
@@ -78,15 +90,46 @@ export async function getUserById(userId: string) {
   if (!user) throw new Error('User not found');
   return user;
 }
+
+// Finds an existing guest row for this email, or provisions a new one.
+// Never returns/touches a non-guest (real) account — checkout must not be
+// able to authenticate into someone else's account via email alone.
+export async function findOrCreateGuestUser(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const existing = await prisma.user.findFirst({ where: { email: normalizedEmail } });
+
+  if (existing) {
+    if (!existing.isGuest) {
+      throw new Error('An account already exists with this email. Please sign in to continue.');
+    }
+    return existing;
+  }
+
+  return prisma.user.create({
+    data: {
+      email: normalizedEmail,
+      name: normalizedEmail.split('@')[0],
+      isGuest: true,
+    },
+  });
+}
+
 export async function updateUserAddress(data: ShippingAddress) {
   try {
     const session = await auth();
 
-    const currentUser = await prisma.user.findFirst({
-      where: { id: session?.user?.id },
-    });
+    let currentUser = session?.user?.id
+      ? await prisma.user.findFirst({ where: { id: session.user.id } })
+      : null;
 
-    if (!currentUser) throw new Error('User not found');
+    if (!currentUser) {
+      if (!data.email) {
+        return { success: false, message: 'Email is required' };
+      }
+
+      currentUser = await findOrCreateGuestUser(data.email);
+      await signIn('guest-checkout', { email: currentUser.email, redirect: false });
+    }
 
     const address = shippingAddressSchema.parse(data);
 

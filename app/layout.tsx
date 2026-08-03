@@ -4,6 +4,8 @@ import { APP_NAME, APP_DESCRIPTION, SERVER_URL } from "@/lib/constants";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import ShapeGrid from "@/components/ShapeGrid";
+import GoogleAnalytics from "@/components/analytics/google-analytics";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -27,12 +29,32 @@ export const metadata: Metadata = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} ${fraunces.variable} antialiased`}>
+      <body
+        className={`relative z-0 ${inter.className} ${fraunces.variable} antialiased`}
+      >
+        {gaMeasurementId && <GoogleAnalytics measurementId={gaMeasurementId} />}
+        <div className="fixed inset-0 -z-10">
+          <div className="relative w-full h-full backdrop-blur-md">
+            <ShapeGrid
+              shape="square"
+              direction="diagonal"
+              speed={0.5}
+              squareSize={48}
+              borderColor="rgba(255, 255, 255, 0.5)"
+              hoverFillColor="rgba(255, 255, 255, 0.85)"
+              vignetteColor="rgba(178, 189, 196, 0.4)"
+              hoverTrailAmount={6}
+            />
+            <div className="absolute inset-0 pointer-events-none mix-blend-overlay" />
+          </div>
+        </div>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >

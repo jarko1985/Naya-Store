@@ -6,9 +6,29 @@ import { getReviews } from '@/lib/actions/review.actions';
 import { isProductWishlisted } from '@/lib/actions/wishlist.actions';
 import { recordProductView, getRecentlyViewed } from '@/lib/actions/recently-viewed.actions';
 import { Product, ProductVariant, RecentlyViewedItem } from '@/types';
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ReviewList from './review-list';
 import ProductList from '@/components/shared/product/product-list';
+import { SERVER_URL } from '@/lib/constants';
+
+export async function generateMetadata(props: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await props.params;
+  const product = await getProductBySlug(slug);
+  if (!product) return { title: 'Product Not Found' };
+
+  return {
+    title: product.name,
+    description: product.description,
+    openGraph: {
+      title: product.name,
+      description: product.description,
+      images: product.images?.length ? [product.images[0]] : undefined,
+    },
+  };
+}
 
 const ProductDetailsPage = async (props: {
   params: Promise<{ slug: string }>;
@@ -33,8 +53,39 @@ const ProductDetailsPage = async (props: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const variants: ProductVariant[] = ((product as any).variants as ProductVariant[]) ?? [];
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description,
+    image: product.images,
+    brand: { '@type': 'Brand', name: product.brand },
+    aggregateRating:
+      product.numReviews > 0
+        ? {
+            '@type': 'AggregateRating',
+            ratingValue: Number(product.rating),
+            reviewCount: product.numReviews,
+          }
+        : undefined,
+    offers: {
+      '@type': 'Offer',
+      url: `${SERVER_URL}/product/${product.slug}`,
+      priceCurrency: 'USD',
+      price: Number(product.price),
+      availability:
+        product.stock > 0
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+    },
+  };
+
   return (
     <div className='max-w-7xl mx-auto px-4 py-8 space-y-16'>
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Product details */}
       <ProductDetailsClient
         product={product as unknown as Product}
