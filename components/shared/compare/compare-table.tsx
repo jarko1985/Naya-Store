@@ -23,7 +23,7 @@ const rows: { label: string; render: (p: Product) => React.ReactNode }[] = [
     ),
   },
   { label: 'Brand', render: (p) => p.brand },
-  { label: 'Category', render: (p) => p.category },
+  { label: 'Category', render: (p) => p.category?.name ?? '—' },
   {
     label: 'Colors',
     render: (p) => {

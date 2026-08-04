@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import ProductForm from '@/components/admin/product-form';
 import { requireAdmin } from '@/lib/auth-guard';
-import { getAllCategories } from '@/lib/actions/product.action';
+import { getAllCategoriesFlat } from '@/lib/actions/category.actions';
 
 export const metadata: Metadata = {
   title: 'Create Product',
@@ -9,8 +9,7 @@ export const metadata: Metadata = {
 
 const CreateProductPage = async () => {
   await requireAdmin();
-  const rawCategories = await getAllCategories();
-  const categories = rawCategories.map((c) => c.category);
+  const categories = await getAllCategoriesFlat();
 
   return (
     <div className='max-w-5xl mx-auto'>

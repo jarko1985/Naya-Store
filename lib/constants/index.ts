@@ -18,68 +18,77 @@ export const signUpDefaultValues = {
 };
 
 export const shippingAddressDefaultValues = {
-  fullName: '',
-  streetAddress: '',
-  city: '',
-  postalCode: '',
-  country: '',
+  fullName: "",
+  streetAddress: "",
+  city: "",
+  postalCode: "",
+  country: "",
 };
 export const PAYMENT_METHODS = process.env.PAYMENT_METHODS
-  ? process.env.PAYMENT_METHODS.split(', ')
-  : ['PayPal', 'Stripe', 'CashOnDelivery'];
+  ? process.env.PAYMENT_METHODS.split(", ")
+  : ["PayPal", "Stripe", "CashOnDelivery"];
 export const DEFAULT_PAYMENT_METHOD =
-  process.env.DEFAULT_PAYMENT_METHOD || 'PayPal';
+  process.env.DEFAULT_PAYMENT_METHOD || "PayPal";
 
 export const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 12;
 
 export const productDefaultValues = {
-  name: '',
-  slug: '',
-  category: '',
+  name: "",
+  slug: "",
+  categoryId: "",
   images: [],
-  brand: '',
-  description: '',
-  price: '0',
-  compareAtPrice: '',
+  brand: "",
+  description: "",
+  price: "0",
+  compareAtPrice: "",
   stock: 0,
-  rating: '0',
-  numReviews: '0',
-  color: 'Black',
-  size: 'M',
+  rating: "0",
+  numReviews: "0",
+  color: "Black",
+  size: "M",
   isFeatured: false,
   banner: null,
 };
 
 export const USER_ROLES = process.env.USER_ROLES
-  ? process.env.USER_ROLES.split(', ')
-  : ['admin', 'user'];
+  ? process.env.USER_ROLES.split(", ")
+  : ["admin", "user"];
 
 export const reviewFormDefaultValues = {
-  title: '',
-  comment: '',
+  title: "",
+  comment: "",
   rating: 0,
 };
 
-export const SENDER_EMAIL = process.env.SENDER_EMAIL || 'no-reply@naya.store';
+export const SENDER_EMAIL =
+  process.env.SENDER_EMAIL || "new.naya.store@gmail.com";
 
-export const PRODUCT_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+export const PRODUCT_SIZES = ["S", "M", "L", "XL", "XXL", "XXXL"];
 
 export const PRODUCT_COLORS = [
-  'Black',
-  'White',
-  'Red',
-  'Green',
-  'Blue',
-  'Yellow',
-  'Orange',
-  'Purple',
-  'Pink',
-  'Brown',
-  'Gray',
-  'Navy',
-  'Beige',
-  'Teal',
+  "Black",
+  "White",
+  "Red",
+  "Green",
+  "Blue",
+  "Yellow",
+  "Orange",
+  "Purple",
+  "Pink",
+  "Brown",
+  "Gray",
+  "Navy",
+  "Beige",
+  "Teal",
 ];
+
+// Maps color names to CSS color values for swatches
+export const PRODUCT_COLOR_SWATCHES: Record<string, string> = {
+  Black: "#000000", White: "#FFFFFF", Red: "#EF4444", Green: "#22C55E",
+  Blue: "#3B82F6", Yellow: "#EAB308", Orange: "#F97316", Purple: "#A855F7",
+  Pink: "#EC4899", Brown: "#92400E", Gray: "#6B7280", Navy: "#1E3A5F",
+  Beige: "#D4B896", Teal: "#14B8A6",
+};
 
 export const LOW_STOCK_THRESHOLD = 5;
 

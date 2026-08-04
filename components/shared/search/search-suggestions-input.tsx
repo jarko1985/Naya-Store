@@ -14,7 +14,7 @@ interface Suggestion {
   slug: string;
   images: string[];
   price: string;
-  category: string;
+  category: { name: string } | null;
 }
 
 const SearchSuggestionsInput = () => {
@@ -79,7 +79,7 @@ const SearchSuggestionsInput = () => {
               />
               <div className='flex-1 min-w-0'>
                 <p className='text-sm truncate'>{s.name}</p>
-                <p className='text-xs text-muted-foreground'>{s.category}</p>
+                <p className='text-xs text-muted-foreground'>{s.category?.name}</p>
               </div>
               <span className='text-sm font-medium shrink-0'>{formatCurrency(s.price)}</span>
             </Link>

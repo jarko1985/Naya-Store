@@ -79,7 +79,7 @@ const AdminProductsPage = async (props: {
               <TableCell className='text-right'>
                 {formatCurrency(product.price)}
               </TableCell>
-              <TableCell className='hidden sm:table-cell'>{product.category}</TableCell>
+              <TableCell className='hidden sm:table-cell'>{product.category?.name}</TableCell>
               <TableCell className='hidden md:table-cell'>{product.stock}</TableCell>
               <TableCell className='hidden lg:table-cell'>{product.rating}</TableCell>
               <TableCell className='flex gap-1'>

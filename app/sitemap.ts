@@ -5,7 +5,7 @@ import { SERVER_URL } from '@/lib/constants';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, categories] = await Promise.all([
     prisma.product.findMany({ select: { slug: true, createdAt: true } }),
-    prisma.product.groupBy({ by: ['category'] }),
+    prisma.category.findMany({ select: { slug: true } }),
   ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -13,8 +13,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SERVER_URL}/search`, changeFrequency: 'daily', priority: 0.8 },
   ];
 
-  const categoryRoutes: MetadataRoute.Sitemap = categories.map(({ category }) => ({
-    url: `${SERVER_URL}/search?category=${encodeURIComponent(category)}`,
+  const categoryRoutes: MetadataRoute.Sitemap = categories.map(({ slug }) => ({
+    url: `${SERVER_URL}/search?category=${encodeURIComponent(slug)}`,
     changeFrequency: 'weekly',
     priority: 0.6,
   }));

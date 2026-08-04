@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import ShapeGrid from "@/components/ShapeGrid";
 import GoogleAnalytics from "@/components/analytics/google-analytics";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -37,6 +38,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         className={`relative z-0 ${inter.className} ${fraunces.variable} antialiased`}
       >
         {gaMeasurementId && <GoogleAnalytics measurementId={gaMeasurementId} />}
+        <SpeedInsights />
         <div className="fixed inset-0 -z-10">
           <div className="relative w-full h-full backdrop-blur-md">
             <ShapeGrid

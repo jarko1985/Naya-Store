@@ -215,3 +215,136 @@ export async function removeItemFromCart(productId: string, variantId?: string) 
     return { success: false, message: formatError(error) };
   }
 }
+
+// Re-add every item from a past order to the current cart ("Buy again").
+// Items whose variant was discontinued or that are now out of stock are
+// skipped and reported back rather than failing the whole reorder.
+export async function reorderFromOrder(orderId: string) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('You must be signed in to reorder');
+    const userId = session.user.id as string;
+
+    const order = await prisma.order.findFirst({
+      where: { id: orderId },
+      include: { orderitems: true },
+    });
+    if (!order || order.userId !== userId) throw new Error('Order not found');
+
+    const sessionCartId = await getOrCreateSessionCartId();
+    const existingCart = await getMyCart();
+    const cartItems: CartItem[] = existingCart
+      ? [...(existingCart.items as CartItem[])]
+      : [];
+
+    const skipped: { name: string; reason: string }[] = [];
+    let addedCount = 0;
+
+    for (const item of order.orderitems) {
+      const product = await prisma.product.findFirst({
+        where: { id: item.productId },
+      });
+      if (!product) {
+        skipped.push({ name: item.name, reason: 'no longer available' });
+        continue;
+      }
+
+      let stock = product.stock;
+      let price = product.price.toString();
+      let image = product.images[0] ?? item.image;
+      let color = item.color ?? undefined;
+      let size = item.size ?? undefined;
+
+      if (item.variantId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variant = await (prisma as any).productVariant.findFirst({
+          where: { id: item.variantId },
+        });
+        if (!variant) {
+          skipped.push({ name: item.name, reason: 'no longer available' });
+          continue;
+        }
+        stock = variant.stock;
+        price = variant.price.toString();
+        image = variant.image;
+        color = variant.color;
+        size = variant.size;
+      }
+
+      if (stock <= 0) {
+        skipped.push({ name: item.name, reason: 'out of stock' });
+        continue;
+      }
+
+      const qty = Math.min(item.qty, stock);
+      if (qty < item.qty) {
+        skipped.push({ name: item.name, reason: `only ${qty} available` });
+      }
+
+      const existingLine = cartItems.find(
+        (x) => x.productId === item.productId && x.variantId === (item.variantId ?? undefined)
+      );
+
+      if (existingLine) {
+        existingLine.qty = Math.min(existingLine.qty + qty, stock);
+      } else {
+        cartItems.push({
+          productId: item.productId,
+          name: product.name,
+          slug: product.slug,
+          price,
+          qty,
+          image,
+          variantId: item.variantId ?? undefined,
+          color,
+          size,
+        });
+      }
+
+      addedCount += qty;
+    }
+
+    if (addedCount === 0) {
+      return {
+        success: false,
+        message: 'None of the items in this order are available to reorder',
+        addedCount: 0,
+        skipped,
+      };
+    }
+
+    const pricing = calcPrice(cartItems, Number(existingCart?.discountAmount ?? 0));
+
+    if (existingCart) {
+      await prisma.cart.update({
+        where: { id: existingCart.id },
+        data: {
+          items: cartItems as Prisma.CartUpdateitemsInput[],
+          ...pricing,
+        },
+      });
+    } else {
+      const newCart = insertCartSchema.parse({
+        userId,
+        items: cartItems,
+        sessionCartId,
+        ...pricing,
+      });
+      await prisma.cart.create({ data: newCart });
+    }
+
+    revalidatePath('/cart');
+
+    return {
+      success: true,
+      message:
+        skipped.length > 0
+          ? `Added ${addedCount} item${addedCount === 1 ? '' : 's'} to your cart — some items were unavailable`
+          : `Added ${addedCount} item${addedCount === 1 ? '' : 's'} to your cart`,
+      addedCount,
+      skipped,
+    };
+  } catch (error) {
+    return { success: false, message: formatError(error), addedCount: 0, skipped: [] };
+  }
+}

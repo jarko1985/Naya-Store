@@ -1,6 +1,7 @@
 import ProductForm from '@/components/admin/product-form';
 import ProductVariantsManager from '@/components/admin/product-variants-manager';
-import { getProductById, getAllCategories } from '@/lib/actions/product.action';
+import { getProductById } from '@/lib/actions/product.action';
+import { getAllCategoriesFlat } from '@/lib/actions/category.actions';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth-guard';
@@ -19,14 +20,12 @@ const AdminProductUpdatePage = async (props: {
 
   const { id } = await props.params;
 
-  const [product, rawCategories] = await Promise.all([
+  const [product, categories] = await Promise.all([
     getProductById(id),
-    getAllCategories(),
+    getAllCategoriesFlat(),
   ]);
 
   if (!product) return notFound();
-
-  const categories = rawCategories.map((c) => c.category);
 
   return (
     <div className='space-y-6 sm:space-y-8 max-w-5xl mx-auto'>

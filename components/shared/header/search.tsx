@@ -6,12 +6,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getAllCategories } from '@/lib/actions/product.action';
+import { getAllCategoriesFlat } from '@/lib/actions/category.actions';
 import { SearchIcon } from 'lucide-react';
 import SearchSuggestionsInput from '@/components/shared/search/search-suggestions-input';
 
 const Search = async () => {
-  const categories = await getAllCategories();
+  const categories = await getAllCategoriesFlat();
 
   return (
     <form action='/search' method='GET'>
@@ -24,9 +24,9 @@ const Search = async () => {
             <SelectItem key='All' value='all'>
               All
             </SelectItem>
-            {categories.map((x) => (
-              <SelectItem key={x.category} value={x.category}>
-                {x.category}
+            {categories.map((c) => (
+              <SelectItem key={c.id} value={c.slug}>
+                {c.parentId ? `— ${c.name}` : c.name}
               </SelectItem>
             ))}
           </SelectContent>

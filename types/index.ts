@@ -13,12 +13,21 @@ export type ProductVariant = {
   createdAt: Date;
 };
 
+export type CategoryRef = {
+  id: string;
+  name: string;
+  slug: string;
+  image: string | null;
+  parentId: string | null;
+};
+
 export type Product = z.infer<typeof insertProductSchema> & {
     id: string;
     rating: string;
     numReviews: number;
     createdAt: Date;
     variants?: ProductVariant[];
+    category?: CategoryRef;
   };
   export type Cart = z.infer<typeof insertCartSchema> & {
     id: string;

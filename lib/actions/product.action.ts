@@ -5,6 +5,8 @@ import { convertToPlainObject, formatError } from "@/lib/utils";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { insertProductSchema, updateProductSchema, insertProductVariantSchema, updateProductVariantSchema } from "../validators";
+import { notifyBackInStock } from "./stock-alert.actions";
+import { getCategoryAndDescendantIds } from "./category.actions";
 import z from "zod";
 export async function getLatestProducts () {
     const data = await prisma.product.findMany({
@@ -18,18 +20,18 @@ export async function getLatestProducts () {
 export async function getProductBySlug(slug: string) {
     const data = await prisma.product.findFirst({
       where: { slug },
-      include: { variants: { orderBy: [{ color: 'asc' }, { size: 'asc' }] } },
+      include: { category: true, variants: { orderBy: [{ color: 'asc' }, { size: 'asc' }] } },
     });
     return convertToPlainObject(data);
   }
   export async function getProductById(productId: string) {
     const data = await prisma.product.findFirst({
       where: { id: productId },
-      include: { variants: { orderBy: [{ color: 'asc' }, { size: 'asc' }] } },
+      include: { category: true, variants: { orderBy: [{ color: 'asc' }, { size: 'asc' }] } },
     });
 
     return convertToPlainObject(data);
-  }  
+  }
   export async function getAllProducts({
     query,
     limit = PAGE_SIZE,
@@ -37,6 +39,8 @@ export async function getProductBySlug(slug: string) {
     category,
     price,
     rating,
+    color,
+    size,
     sort,
   }: {
     query: string;
@@ -45,6 +49,8 @@ export async function getProductBySlug(slug: string) {
     category?: string;
     price?: string;
     rating?: string;
+    color?: string;
+    size?: string;
     sort?: string;
   }) {
     // Query filter
@@ -57,10 +63,16 @@ export async function getProductBySlug(slug: string) {
             } as Prisma.StringFilter,
           }
         : {};
-  
-    // Category filter
-    const categoryFilter = category && category !== 'all' ? { category } : {};
-  
+
+    // Category filter — `category` is a slug; matches the category itself plus every
+    // descendant subcategory, so browsing a parent reflects the hierarchy. Applied even
+    // when categoryIds ends up empty (unknown slug), so it correctly yields zero results
+    // rather than silently falling back to "no filter".
+    const categoryFilter: Prisma.ProductWhereInput =
+      category && category !== 'all'
+        ? { categoryId: { in: await getCategoryAndDescendantIds(category) } }
+        : {};
+
     // Price filter
     const priceFilter: Prisma.ProductWhereInput =
       price && price !== 'all'
@@ -71,7 +83,7 @@ export async function getProductBySlug(slug: string) {
             },
           }
         : {};
-  
+
     // Rating filter
     const ratingFilter =
       rating && rating !== 'all'
@@ -81,14 +93,47 @@ export async function getProductBySlug(slug: string) {
             },
           }
         : {};
-  
+
+    // Color filter — matches either the product's own base color or any variant's color
+    const colorList = color && color !== 'all' ? color.split(',').filter(Boolean) : [];
+    const colorFilter: Prisma.ProductWhereInput =
+      colorList.length > 0
+        ? {
+            OR: [
+              { color: { in: colorList } },
+              { variants: { some: { color: { in: colorList } } } },
+            ],
+          }
+        : {};
+
+    // Size filter — matches either the product's own base size or any variant's size
+    const sizeList = size && size !== 'all' ? size.split(',').filter(Boolean) : [];
+    const sizeFilter: Prisma.ProductWhereInput =
+      sizeList.length > 0
+        ? {
+            OR: [
+              { size: { in: sizeList } },
+              { variants: { some: { size: { in: sizeList } } } },
+            ],
+          }
+        : {};
+
+    // Combined via AND (rather than flat-spreading, which would silently clobber
+    // colorFilter's OR key with sizeFilter's OR key if both were spread as siblings)
+    const where: Prisma.ProductWhereInput = {
+      AND: [
+        queryFilter,
+        categoryFilter,
+        priceFilter,
+        ratingFilter,
+        colorFilter,
+        sizeFilter,
+      ].filter((f) => Object.keys(f).length > 0),
+    };
+
     const data = await prisma.product.findMany({
-      where: {
-        ...queryFilter,
-        ...categoryFilter,
-        ...priceFilter,
-        ...ratingFilter,
-      },
+      where,
+      include: { category: true },
       orderBy:
         sort === 'lowest'
           ? { price: 'asc' }
@@ -100,8 +145,8 @@ export async function getProductBySlug(slug: string) {
       skip: (page - 1) * limit,
       take: limit,
     });
-  
-    const dataCount = await prisma.product.count();
+
+    const dataCount = await prisma.product.count({ where });
 
     return {
       data: convertToPlainObject(data),
@@ -162,6 +207,14 @@ export async function getProductBySlug(slug: string) {
         data: { ...product, compareAtPrice: product.compareAtPrice || null },
       });
 
+      if (productExists.stock === 0 && product.stock > 0) {
+        try {
+          await notifyBackInStock(product.id);
+        } catch {
+          // Restock succeeded regardless of whether the alert emails went out
+        }
+      }
+
       revalidatePath('/admin/products');
 
       return {
@@ -171,16 +224,6 @@ export async function getProductBySlug(slug: string) {
     } catch (error) {
       return { success: false, message: formatError(error) };
     }
-  }
-  
-  // Get all categories
-  export async function getAllCategories() {
-    const data = await prisma.product.groupBy({
-      by: ['category'],
-      _count: true,
-    });
-  
-    return data;
   }
   
   // Get featured products
@@ -222,9 +265,31 @@ export async function getProductBySlug(slug: string) {
   export async function createProductVariant(data: z.infer<typeof insertProductVariantSchema>) {
     try {
       const variant = insertProductVariantSchema.parse(data);
+
+      // Determine the product's stock before this variant is added, so we can
+      // tell whether adding it is what brings a fully out-of-stock product back
+      const product = await prisma.product.findFirst({
+        where: { id: variant.productId },
+        include: { variants: { select: { stock: true } } },
+      });
+      const priorStock = product
+        ? product.variants.length > 0
+          ? product.variants.reduce((sum, v) => sum + v.stock, 0)
+          : product.stock
+        : 0;
+
       await prisma.productVariant.create({
         data: { ...variant, compareAtPrice: variant.compareAtPrice || null },
       });
+
+      if (priorStock === 0 && variant.stock > 0) {
+        try {
+          await notifyBackInStock(variant.productId);
+        } catch {
+          // Variant creation succeeded regardless of whether the alert emails went out
+        }
+      }
+
       revalidatePath('/admin/products');
       return { success: true, message: 'Variant created successfully' };
     } catch (error) {
@@ -236,6 +301,12 @@ export async function getProductBySlug(slug: string) {
   export async function updateProductVariant(data: z.infer<typeof updateProductVariantSchema>) {
     try {
       const variant = updateProductVariantSchema.parse(data);
+
+      const existingVariant = await prisma.productVariant.findFirst({
+        where: { id: variant.id },
+      });
+      if (!existingVariant) throw new Error('Variant not found');
+
       await prisma.productVariant.update({
         where: { id: variant.id },
         data: {
@@ -247,6 +318,15 @@ export async function getProductBySlug(slug: string) {
           image: variant.image,
         },
       });
+
+      if (existingVariant.stock === 0 && variant.stock > 0) {
+        try {
+          await notifyBackInStock(existingVariant.productId);
+        } catch {
+          // Variant update succeeded regardless of whether the alert emails went out
+        }
+      }
+
       revalidatePath('/admin/products');
       return { success: true, message: 'Variant updated successfully' };
     } catch (error) {
@@ -268,16 +348,16 @@ export async function getProductBySlug(slug: string) {
   // Get products related to a given product (same category, best rated first)
   export async function getRelatedProducts({
     productId,
-    category,
+    categoryId,
     limit = 4,
   }: {
     productId: string;
-    category: string;
+    categoryId: string;
     limit?: number;
   }) {
     const data = await prisma.product.findMany({
       where: {
-        category,
+        categoryId,
         id: { not: productId },
       },
       orderBy: [{ rating: 'desc' }, { numReviews: 'desc' }],
@@ -301,7 +381,7 @@ export async function getProductBySlug(slug: string) {
         slug: true,
         images: true,
         price: true,
-        category: true,
+        category: { select: { name: true } },
       },
       orderBy: { numReviews: 'desc' },
       take: limit,
@@ -312,19 +392,19 @@ export async function getProductBySlug(slug: string) {
 
   // Upsell suggestions for the cart page — same categories as items already in cart, excluding those items
   export async function getCartUpsells({
-    categories,
+    categoryIds,
     excludeIds,
     limit = 4,
   }: {
-    categories: string[];
+    categoryIds: string[];
     excludeIds: string[];
     limit?: number;
   }) {
-    if (categories.length === 0) return [];
+    if (categoryIds.length === 0) return [];
 
     const data = await prisma.product.findMany({
       where: {
-        category: { in: categories },
+        categoryId: { in: categoryIds },
         id: { notIn: excludeIds },
       },
       orderBy: [{ rating: 'desc' }, { numReviews: 'desc' }],
@@ -340,7 +420,7 @@ export async function getProductBySlug(slug: string) {
 
     const data = await prisma.product.findMany({
       where: { id: { in: ids } },
-      include: { variants: { orderBy: [{ color: 'asc' }, { size: 'asc' }] } },
+      include: { category: true, variants: { orderBy: [{ color: 'asc' }, { size: 'asc' }] } },
     });
 
     return convertToPlainObject(data);

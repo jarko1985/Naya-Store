@@ -9,13 +9,15 @@ import { upsertCategoryImage } from '@/lib/actions/category.actions';
 import { Button } from '@/components/ui/button';
 
 export default function CategoryImageForm({
+  categoryId,
   categoryName,
   currentImage,
 }: {
+  categoryId: string;
   categoryName: string;
-  currentImage?: string;
+  currentImage?: string | null;
 }) {
-  const [image, setImage] = useState(currentImage);
+  const [image, setImage] = useState(currentImage ?? undefined);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -31,7 +33,7 @@ export default function CategoryImageForm({
       const url = res?.[0]?.ufsUrl;
       if (!url) throw new Error('Upload failed');
 
-      const result = await upsertCategoryImage(categoryName, url);
+      const result = await upsertCategoryImage(categoryId, url);
       if (result.success) {
         setImage(url);
         toast.success(`Image set for "${categoryName}"`);

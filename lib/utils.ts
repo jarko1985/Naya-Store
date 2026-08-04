@@ -10,6 +10,17 @@ export function convertToPlainObject<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
 }
 
+// Flattens a category tree into rows in display order, tracking depth for indentation
+export function flattenCategoryTree<T extends { children: T[] }>(
+  nodes: T[],
+  depth = 0
+): { node: T; depth: number }[] {
+  return nodes.flatMap((node) => [
+    { node, depth },
+    ...flattenCategoryTree(node.children, depth + 1),
+  ]);
+}
+
 export function formatNumberWithDecimal(num: number): string {
   const [int, decimal] = num.toString().split('.');
   return decimal ? `${int}.${decimal.padEnd(2, '0')}` : `${int}.00`;

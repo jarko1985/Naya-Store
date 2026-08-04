@@ -45,7 +45,7 @@ const ProductDetailsPage = async (props: {
   await recordProductView(product.id);
 
   const [relatedProducts, recentlyViewed, { data: reviews }] = await Promise.all([
-    getRelatedProducts({ productId: product.id, category: product.category }),
+    getRelatedProducts({ productId: product.id, categoryId: product.categoryId }),
     getRecentlyViewed(product.id) as Promise<RecentlyViewedItem[]>,
     getReviews({ productId: product.id }),
   ]);

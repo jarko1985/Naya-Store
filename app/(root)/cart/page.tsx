@@ -15,8 +15,8 @@ const CartPage = async () => {
   if (cart && cart.items.length > 0) {
     const productIds = cart.items.map((item) => item.productId);
     const cartProducts = (await getProductsByIds(productIds)) as unknown as Product[];
-    const categories = [...new Set(cartProducts.map((p) => p.category))];
-    upsells = (await getCartUpsells({ categories, excludeIds: productIds })) as Product[];
+    const categoryIds = [...new Set(cartProducts.map((p) => p.categoryId))];
+    upsells = (await getCartUpsells({ categoryIds, excludeIds: productIds })) as Product[];
   }
 
   return (

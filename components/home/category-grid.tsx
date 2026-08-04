@@ -21,8 +21,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { getAllCategories } from "@/lib/actions/product.action";
-import { getAllCategoryMeta } from "@/lib/actions/category.actions";
+import { getCategoryTree } from "@/lib/actions/category.actions";
 import BrowseAllLink from "./browse-all-link";
 import type { LucideIcon } from "lucide-react";
 
@@ -222,20 +221,13 @@ function getCategoryStyle(name: string): CategoryStyle {
 }
 
 const CategoryGrid = async () => {
-  const [categories, categoryMeta] = await Promise.all([
-    getAllCategories(),
-    getAllCategoryMeta(),
-  ]);
+  const tree = await getCategoryTree();
 
-  if (!categories.length) return null;
+  if (!tree.length) return null;
 
-  const topCategories = [...categories]
-    .sort((a, b) => b._count - a._count)
+  const topCategories = [...tree]
+    .sort((a, b) => b.productCount - a.productCount)
     .slice(0, MAX_CATEGORIES);
-
-  const metaMap = Object.fromEntries(
-    categoryMeta.map((m: { name: string; image: string }) => [m.name, m.image]),
-  );
 
   return (
     <section className="mb-12 opacity-85">
@@ -252,66 +244,64 @@ const CategoryGrid = async () => {
 
       {/* Category grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        {topCategories.map(
-          ({ category, _count }: { category: string; _count: number }) => {
-            const image = metaMap[category];
-            const {
-              icon: Icon,
-              gradient,
-              iconColor,
-            } = getCategoryStyle(category);
+        {topCategories.map((category) => {
+          const image = category.image;
+          const {
+            icon: Icon,
+            gradient,
+            iconColor,
+          } = getCategoryStyle(category.name);
 
-            return image ? (
-              // ── Image card ────────────────────────────────────────────
-              <Link
-                key={category}
-                href={`/search?category=${encodeURIComponent(category)}`}
-                className="group relative flex flex-col overflow-hidden rounded-xl border shadow-sm hover:scale-[1.04] hover:shadow-xl transition-all duration-200 cursor-pointer aspect-[3/4]"
-              >
-                <Image
-                  src={image}
-                  alt={category}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <p className="text-white text-sm font-semibold line-clamp-2 leading-tight">
-                    {category}
-                  </p>
-                  <Badge
-                    variant="secondary"
-                    className="mt-1.5 text-xs px-2 py-0 h-5 font-normal bg-white/20 text-white border-0 backdrop-blur-sm"
-                  >
-                    {_count} items
-                  </Badge>
-                </div>
-              </Link>
-            ) : (
-              // ── Icon fallback card ─────────────────────────────────────
-              <Link
-                key={category}
-                href={`/search?category=${encodeURIComponent(category)}`}
-                className={`group flex flex-col items-center gap-3 p-5 rounded-xl border shadow-sm bg-gradient-to-br ${gradient} hover:scale-[1.04] hover:shadow-xl transition-all duration-200 cursor-pointer`}
-              >
-                <div className="p-3 rounded-full bg-background/40 backdrop-blur-sm group-hover:bg-background/60 transition-colors">
-                  <Icon className={`w-5 h-5 ${iconColor}`} />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-semibold line-clamp-1">
-                    {category}
-                  </p>
-                  <Badge
-                    variant="secondary"
-                    className="mt-1.5 text-xs px-2 py-0 h-5 font-normal"
-                  >
-                    {_count} items
-                  </Badge>
-                </div>
-              </Link>
-            );
-          },
-        )}
+          return image ? (
+            // ── Image card ────────────────────────────────────────────
+            <Link
+              key={category.id}
+              href={`/search?category=${category.slug}`}
+              className="group relative flex flex-col overflow-hidden rounded-xl border shadow-sm hover:scale-[1.04] hover:shadow-xl transition-all duration-200 cursor-pointer aspect-[3/4]"
+            >
+              <Image
+                src={image}
+                alt={category.name}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-3">
+                <p className="text-white text-sm font-semibold line-clamp-2 leading-tight">
+                  {category.name}
+                </p>
+                <Badge
+                  variant="secondary"
+                  className="mt-1.5 text-xs px-2 py-0 h-5 font-normal bg-white/20 text-white border-0 backdrop-blur-sm"
+                >
+                  {category.productCount} items
+                </Badge>
+              </div>
+            </Link>
+          ) : (
+            // ── Icon fallback card ─────────────────────────────────────
+            <Link
+              key={category.id}
+              href={`/search?category=${category.slug}`}
+              className={`group flex flex-col items-center gap-3 p-5 rounded-xl border shadow-sm bg-gradient-to-br ${gradient} hover:scale-[1.04] hover:shadow-xl transition-all duration-200 cursor-pointer`}
+            >
+              <div className="p-3 rounded-full bg-background/40 backdrop-blur-sm group-hover:bg-background/60 transition-colors">
+                <Icon className={`w-5 h-5 ${iconColor}`} />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold line-clamp-1">
+                  {category.name}
+                </p>
+                <Badge
+                  variant="secondary"
+                  className="mt-1.5 text-xs px-2 py-0 h-5 font-normal"
+                >
+                  {category.productCount} items
+                </Badge>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );

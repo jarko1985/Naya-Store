@@ -1,7 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
-import { productDefaultValues, PRODUCT_SIZES, PRODUCT_COLORS } from '@/lib/constants';
+import { productDefaultValues, PRODUCT_SIZES, PRODUCT_COLORS, PRODUCT_COLOR_SWATCHES as colorMap } from '@/lib/constants';
 import { insertProductSchema, updateProductSchema } from '@/lib/validators';
 import { Product } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,6 +21,7 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { createProduct, updateProduct, createProductVariant } from '@/lib/actions/product.action';
+import { createCategory } from '@/lib/actions/category.actions';
 import { UploadButton } from '@/lib/uploadthing';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import Image from 'next/image';
@@ -35,13 +36,6 @@ import { Switch } from '../ui/switch';
 import { Badge } from '../ui/badge';
 import { useState } from 'react';
 import { Trash2, Plus, Wand2, ImagePlus, X, Tag, DollarSign, Star, FileText, Layers } from 'lucide-react';
-
-const colorMap: Record<string, string> = {
-  Black: '#000000', White: '#FFFFFF', Red: '#EF4444', Green: '#22C55E',
-  Blue: '#3B82F6', Yellow: '#EAB308', Orange: '#F97316', Purple: '#A855F7',
-  Pink: '#EC4899', Brown: '#92400E', Gray: '#6B7280', Navy: '#1E3A5F',
-  Beige: '#D4B896', Teal: '#14B8A6',
-};
 
 interface PendingVariant {
   color: string;
@@ -63,13 +57,15 @@ const ProductForm = ({
   type: 'Create' | 'Update';
   product?: Product;
   productId?: string;
-  categories?: string[];
+  categories?: { id: string; name: string; parentId: string | null }[];
 }) => {
   const router = useRouter();
   const [pendingVariants, setPendingVariants] = useState<PendingVariant[]>([]);
   const [variantForm, setVariantForm] = useState<PendingVariant>(emptyVariantForm);
+  const [localCategories, setLocalCategories] = useState(categories);
   const [customCategory, setCustomCategory] = useState('');
   const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [creatingCategory, setCreatingCategory] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const form = useForm<z.infer<typeof insertProductSchema>>({
@@ -189,23 +185,21 @@ const ProductForm = ({
             />
 
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-              {/* Category — dropdown from DB */}
+              {/* Category — dropdown from DB, with a quick-create for a new top-level category */}
               <FormField
                 control={form.control}
-                name='category'
-                render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'category'> }) => (
+                name='categoryId'
+                render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'categoryId'> }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
                     <FormControl>
                       <div className='space-y-2'>
                         {!showCustomCategory ? (
                           <Select
-
                             value={field.value}
                             onValueChange={(val) => {
                               if (val === '__custom__') {
                                 setShowCustomCategory(true);
-                                field.onChange('');
                               } else {
                                 field.onChange(val);
                               }
@@ -215,8 +209,10 @@ const ProductForm = ({
                               <SelectValue placeholder='Select a category' />
                             </SelectTrigger>
                             <SelectContent>
-                              {categories.map((c) => (
-                                <SelectItem key={c} value={c}>{c}</SelectItem>
+                              {localCategories.map((c) => (
+                                <SelectItem key={c.id} value={c.id}>
+                                  {c.parentId ? `— ${c.name}` : c.name}
+                                </SelectItem>
                               ))}
                               <SelectItem value='__custom__'>
                                 <span className='text-primary font-medium'>+ Add new category</span>
@@ -228,12 +224,33 @@ const ProductForm = ({
                             <Input
                               placeholder='Type new category name'
                               value={customCategory}
-                              onChange={(e) => {
-                                setCustomCategory(e.target.value);
-                                field.onChange(e.target.value);
-                              }}
+                              onChange={(e) => setCustomCategory(e.target.value)}
                               className='flex-1'
                             />
+                            <Button
+                              type='button'
+                              size='sm'
+                              disabled={creatingCategory || !customCategory.trim()}
+                              onClick={async () => {
+                                setCreatingCategory(true);
+                                const res = await createCategory({ name: customCategory.trim() });
+                                setCreatingCategory(false);
+                                if (!res.success || !res.id) {
+                                  toast.error(res.message);
+                                  return;
+                                }
+                                setLocalCategories((prev) => [
+                                  ...prev,
+                                  { id: res.id!, name: customCategory.trim(), parentId: null },
+                                ]);
+                                field.onChange(res.id);
+                                setShowCustomCategory(false);
+                                setCustomCategory('');
+                                toast.success(res.message);
+                              }}
+                            >
+                              {creatingCategory ? 'Adding...' : 'Add'}
+                            </Button>
                             <Button
                               type='button'
                               variant='ghost'
@@ -241,7 +258,6 @@ const ProductForm = ({
                               onClick={() => {
                                 setShowCustomCategory(false);
                                 setCustomCategory('');
-                                field.onChange('');
                               }}
                             >
                               <X className='w-4 h-4' />

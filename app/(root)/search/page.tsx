@@ -3,10 +3,10 @@ import EmptyState from '@/components/shared/empty-state';
 import SortChips from '@/components/shared/search/sort-chips';
 import ResultSummary from '@/components/shared/search/result-summary';
 import FiltersDrawer from '@/components/shared/search/filters-drawer';
-import {
-  getAllProducts,
-  getAllCategories,
-} from '@/lib/actions/product.action';
+import { getAllProducts } from '@/lib/actions/product.action';
+import { getCategoryTree } from '@/lib/actions/category.actions';
+import { PRODUCT_COLORS, PRODUCT_SIZES, PRODUCT_COLOR_SWATCHES } from '@/lib/constants';
+import { flattenCategoryTree } from '@/lib/utils';
 import Link from 'next/link';
 import { SearchX } from 'lucide-react';
 
@@ -79,6 +79,8 @@ const SearchPage = async (props: {
     category?: string;
     price?: string;
     rating?: string;
+    color?: string;
+    size?: string;
     sort?: string;
     page?: string;
   }>;
@@ -88,9 +90,14 @@ const SearchPage = async (props: {
     category = 'all',
     price = 'all',
     rating = 'all',
+    color = 'all',
+    size = 'all',
     sort = 'newest',
     page = '1',
   } = await props.searchParams;
+
+  const colorList = color !== 'all' ? color.split(',').filter(Boolean) : [];
+  const sizeList = size !== 'all' ? size.split(',').filter(Boolean) : [];
 
   // Construct filter url
   const getFilterUrl = ({
@@ -99,22 +106,42 @@ const SearchPage = async (props: {
     s,
     r,
     pg,
+    cl,
+    sz,
   }: {
     c?: string;
     p?: string;
     s?: string;
     r?: string;
     pg?: string;
+    cl?: string;
+    sz?: string;
   }) => {
-    const params = { q, category, price, rating, sort, page };
+    const params = { q, category, price, rating, color, size, sort, page };
 
     if (c) params.category = c;
     if (p) params.price = p;
     if (s) params.sort = s;
     if (r) params.rating = r;
     if (pg) params.page = pg;
+    if (cl) params.color = cl;
+    if (sz) params.size = sz;
 
     return `/search?${new URLSearchParams(params).toString()}`;
+  };
+
+  // Toggle a single color/size value in/out of the current comma-separated selection
+  const toggleColorUrl = (value: string) => {
+    const next = colorList.includes(value)
+      ? colorList.filter((v) => v !== value)
+      : [...colorList, value];
+    return getFilterUrl({ cl: next.length > 0 ? next.join(',') : 'all' });
+  };
+  const toggleSizeUrl = (value: string) => {
+    const next = sizeList.includes(value)
+      ? sizeList.filter((v) => v !== value)
+      : [...sizeList, value];
+    return getFilterUrl({ sz: next.length > 0 ? next.join(',') : 'all' });
   };
 
   const products = await getAllProducts({
@@ -122,21 +149,27 @@ const SearchPage = async (props: {
     category,
     price,
     rating,
+    color,
+    size,
     sort,
     page: Number(page),
   });
 
-  const categories = await getAllCategories();
+  const categoryTree = await getCategoryTree();
+  const categoryRows = flattenCategoryTree(categoryTree);
+  const categoryNameBySlug = new Map(categoryRows.map(({ node }) => [node.slug, node.name]));
 
   const hasAnyFilter =
     (q !== 'all' && q !== '') ||
     (category !== 'all' && category !== '') ||
     rating !== 'all' ||
-    price !== 'all';
+    price !== 'all' ||
+    colorList.length > 0 ||
+    sizeList.length > 0;
 
   const activeFilters = [
     ...(category !== 'all' && category !== ''
-      ? [{ label: `Category: ${category}`, clearHref: getFilterUrl({ c: 'all' }) }]
+      ? [{ label: `Category: ${categoryNameBySlug.get(category) ?? category}`, clearHref: getFilterUrl({ c: 'all' }) }]
       : []),
     ...(price !== 'all'
       ? [{ label: `Price: ${prices.find((p) => p.value === price)?.name ?? price}`, clearHref: getFilterUrl({ p: 'all' }) }]
@@ -144,6 +177,8 @@ const SearchPage = async (props: {
     ...(rating !== 'all'
       ? [{ label: `${rating} stars & up`, clearHref: getFilterUrl({ r: 'all' }) }]
       : []),
+    ...colorList.map((c) => ({ label: `Color: ${c}`, clearHref: toggleColorUrl(c) })),
+    ...sizeList.map((s) => ({ label: `Size: ${s}`, clearHref: toggleSizeUrl(s) })),
   ];
 
   const filterContent = (
@@ -162,13 +197,14 @@ const SearchPage = async (props: {
               Any
             </Link>
           </li>
-          {categories.map((x) => (
-            <li key={x.category}>
+          {categoryRows.map(({ node, depth }) => (
+            <li key={node.id} style={{ paddingLeft: `${depth * 1}rem` }}>
               <Link
-                className={`${category === x.category && 'font-bold'}`}
-                href={getFilterUrl({ c: x.category })}
+                className={`${category === node.slug && 'font-bold'}`}
+                href={getFilterUrl({ c: node.slug })}
               >
-                {x.category}
+                {depth > 0 && '— '}
+                {node.name}
               </Link>
             </li>
           ))}
@@ -221,6 +257,47 @@ const SearchPage = async (props: {
             </li>
           ))}
         </ul>
+      </div>
+      {/* Color Links */}
+      <div className='text-xl mb-2 mt-8'>Color</div>
+      <div className='flex flex-wrap gap-2'>
+        {PRODUCT_COLORS.map((c) => {
+          const isSelected = colorList.includes(c);
+          return (
+            <Link
+              key={c}
+              href={toggleColorUrl(c)}
+              title={c}
+              className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-xs ${
+                isSelected ? 'border-primary bg-primary/10 font-bold' : 'border-border'
+              }`}
+            >
+              <span
+                className='w-3 h-3 rounded-full border border-border shrink-0'
+                style={{ backgroundColor: PRODUCT_COLOR_SWATCHES[c] ?? '#ccc' }}
+              />
+              {c}
+            </Link>
+          );
+        })}
+      </div>
+      {/* Size Links */}
+      <div className='text-xl mb-2 mt-8'>Size</div>
+      <div className='flex flex-wrap gap-2'>
+        {PRODUCT_SIZES.map((s) => {
+          const isSelected = sizeList.includes(s);
+          return (
+            <Link
+              key={s}
+              href={toggleSizeUrl(s)}
+              className={`rounded-full border px-2.5 py-1 text-xs ${
+                isSelected ? 'border-primary bg-primary/10 font-bold' : 'border-border'
+              }`}
+            >
+              {s}
+            </Link>
+          );
+        })}
       </div>
     </>
   );

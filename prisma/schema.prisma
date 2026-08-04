@@ -12,7 +12,8 @@ model Product {
   id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name           String
   slug           String           @unique(map: "product_slug_idx")
-  category       String
+  categoryId     String           @db.Uuid
+  category       Category         @relation(fields: [categoryId], references: [id])
   images         String[]
   brand          String
   description    String
@@ -31,6 +32,7 @@ model Product {
   variants       ProductVariant[]
   Wishlist       Wishlist[]
   RecentlyViewed RecentlyViewed[]
+  StockAlert     StockAlert[]
 }
 
 model ProductVariant {
@@ -44,6 +46,18 @@ model ProductVariant {
   stock          Int      @default(0)
   image          String
   createdAt      DateTime @default(now()) @db.Timestamp(6)
+}
+
+model Category {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String     @unique
+  slug      String     @unique
+  image     String?
+  parentId  String?    @db.Uuid
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Category[] @relation("CategoryHierarchy")
+  products  Product[]
+  createdAt DateTime   @default(now()) @db.Timestamp(6)
 }
 
 model User {
@@ -168,13 +182,6 @@ model Review {
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model CategoryMeta {
-  name  String @id
-  image String
-
-  @@map("category_meta")
-}
-
 model Wishlist {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String   @db.Uuid
@@ -217,6 +224,16 @@ model Subscriber {
   email     String   @unique(map: "subscriber_email_idx")
   source    String?
   createdAt DateTime @default(now()) @db.Timestamp(6)
+}
+
+model StockAlert {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String
+  productId String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([email, productId], map: "stock_alert_email_product_idx")
 }
 
 

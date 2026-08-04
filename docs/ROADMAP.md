@@ -133,7 +133,7 @@ Three hard dependencies drive the ordering:
 
 **Depends on:** Sprint 1 (guest email capture — carts without a captured email can't be recovered).
 
-**Key tasks:** Scheduled job (cron) scanning carts with no recent activity, sending a reminder via Resend using the existing email pattern (`email/purchase-receipt.tsx` as a template reference).
+**Key tasks:** Scheduled job (cron) scanning carts with no recent activity, sending a reminder via the existing Nodemailer/Gmail SMTP pattern (`email/purchase-receipt.tsx` as a template reference) — note the Sprint 2 log's gotcha about Gmail's sending cap and lack of domain-level SPF/DKIM/DMARC before relying on it at volume.
 
 **Acceptance criteria:** A cart abandoned for the configured threshold triggers exactly one reminder email to the associated address (registered user or guest email captured in Sprint 1), with no duplicate sends.
 

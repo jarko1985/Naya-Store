@@ -19,11 +19,15 @@ import {
   Ruler,
   Copy,
   Scale,
+  Bell,
+  Check,
 } from "lucide-react";
 import { Cart, CartItem, Product, ProductVariant, Review } from "@/types";
 import { addItemToCart, removeItemFromCart } from "@/lib/actions/cart.actions";
 import { toggleWishlistItem } from "@/lib/actions/wishlist.actions";
+import { subscribeToStockAlert } from "@/lib/actions/stock-alert.actions";
 import { useCompare } from "@/lib/hooks/use-compare";
+import { Input } from "@/components/ui/input";
 import ProductGallery from "./product-gallery";
 import ReviewSummaryCard from "./review-summary-card";
 import Rating from "./rating";
@@ -83,6 +87,9 @@ const ProductDetailsClient = ({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isWishlistPending, startWishlistTransition] = useTransition();
+  const [isAlertPending, startAlertTransition] = useTransition();
+  const [alertEmail, setAlertEmail] = useState("");
+  const [alertSent, setAlertSent] = useState(false);
   const {
     isComparing,
     toggle: toggleCompare,
@@ -180,6 +187,9 @@ const ProductDetailsClient = ({
   // SKU — use product id last 12 chars
   const sku = product.id.replace(/-/g, "").slice(0, 12).toUpperCase();
 
+  // Show the back-in-stock signup whenever the currently displayed stock is 0
+  const showStockAlert = displayStock === 0;
+
   // --- Handlers ---
   const handleColorSelect = (color: string) => {
     setSelectedColor(color);
@@ -275,6 +285,27 @@ const ProductDetailsClient = ({
     });
   };
 
+  const handleStockAlertSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!alertEmail) {
+      toast.error("Please enter your email");
+      return;
+    }
+
+    startAlertTransition(async () => {
+      const res = await subscribeToStockAlert({
+        email: alertEmail,
+        productId: product.id,
+      });
+      if (!res.success) {
+        toast.error(res.message);
+        return;
+      }
+      setAlertSent(true);
+      toast.success(res.message);
+    });
+  };
+
   const handleCompareToggle = () => {
     const result = toggleCompare(product.id);
     if (result === "limit-reached") {
@@ -336,7 +367,7 @@ const ProductDetailsClient = ({
         {/* ── 1. Product Name ── */}
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-1">
-            {product.brand} · {product.category}
+            {product.brand} · {product.category?.name}
           </p>
           <h1 className="text-2xl font-bold leading-snug text-foreground">
             {product.name}
@@ -395,6 +426,51 @@ const ProductDetailsClient = ({
             </span>
           )}
         </div>
+
+        {/* ── 3b. Back-in-stock alert ── */}
+        {showStockAlert && (
+          <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
+            {alertSent ? (
+              <p className="text-sm font-medium flex items-center gap-1.5 text-green-600">
+                <Check className="w-4 h-4" />
+                We&apos;ll email you when this is back in stock
+              </p>
+            ) : (
+              <form
+                onSubmit={handleStockAlertSubmit}
+                className="flex flex-col sm:flex-row gap-2"
+              >
+                <p className="text-sm font-medium flex items-center gap-1.5 sm:hidden">
+                  <Bell className="w-4 h-4 text-primary" />
+                  Notify me when back in stock
+                </p>
+                <Input
+                  type="email"
+                  required
+                  placeholder="you@example.com"
+                  value={alertEmail}
+                  onChange={(e) => setAlertEmail(e.target.value)}
+                  className="flex-1 h-10 bg-background"
+                  disabled={isAlertPending}
+                />
+                <button
+                  type="submit"
+                  disabled={isAlertPending}
+                  className="h-10 px-4 rounded-full bg-black text-white text-sm font-semibold flex items-center justify-center gap-1.5 hover:bg-gray-800 transition-colors disabled:opacity-50 shrink-0"
+                >
+                  {isAlertPending ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Bell className="w-4 h-4 hidden sm:inline" />
+                      Notify Me
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
 
         {/* ── 4. Color Selector ── */}
         {availableColors.length > 0 && (

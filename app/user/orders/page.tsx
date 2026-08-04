@@ -11,6 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Pagination from '@/components/shared/pagination';
+import BuyAgainButton from '@/components/shared/order/buy-again-button';
 
 export const metadata: Metadata = {
   title: 'My Orders',
@@ -62,6 +63,7 @@ const OrdersPage = async (props: {
                   <Link href={`/order/${order.id}`}>
                     <span className='px-2'>Details</span>
                   </Link>
+                  <BuyAgainButton orderId={order.id} />
                 </TableCell>
               </TableRow>
             ))}

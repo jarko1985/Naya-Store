@@ -13,7 +13,7 @@ const currency = z
 export const insertProductSchema = z.object({
     name: z.string().min(3, 'Name must be at least 3 characters'),
     slug: z.string().min(3, 'Slug must be at least 3 characters'),
-    category: z.string().min(3, 'Category must be at least 3 characters'),
+    categoryId: z.string().min(1, 'Category is required'),
     brand: z.string().min(3, 'Brand must be at least 3 characters'),
     description: z.string().min(3, 'Description must be at least 3 characters'),
     stock: z.coerce.number(),
@@ -165,6 +165,13 @@ export const signUpFormSchema = z
     id: z.string().min(1, 'Id is required'),
   });
 
+  // Schema for creating a category (optionally nested under a parent)
+  export const insertCategorySchema = z.object({
+    name: z.string().min(1, 'Name is required'),
+    parentId: z.string().nullable().optional(),
+    image: z.string().nullable().optional(),
+  });
+
   // Schema for toggling a wishlist item
   export const wishlistItemSchema = z.object({
     productId: z.string().min(1, 'Product is required'),
@@ -175,6 +182,12 @@ export const signUpFormSchema = z
   export const newsletterSchema = z.object({
     email: z.string().email('Invalid email address'),
     source: z.string().optional(),
+  });
+
+  // Schema for back-in-stock alert signup
+  export const stockAlertSchema = z.object({
+    email: z.string().email('Invalid email address'),
+    productId: z.string().min(1, 'Product is required'),
   });
 
   // Schema for applying a coupon code

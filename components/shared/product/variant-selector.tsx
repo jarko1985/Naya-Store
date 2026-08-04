@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import ProductPrice from './product-price';
 import AddToCart from './add-to-cart';
 import { Cart, ProductVariant } from '@/types';
+import { PRODUCT_COLOR_SWATCHES as colorMap } from '@/lib/constants';
 
 interface VariantSelectorProps {
   product: {
@@ -19,14 +20,6 @@ interface VariantSelectorProps {
   variants: ProductVariant[];
   cart?: Cart;
 }
-
-// Maps color names to CSS color values for swatches
-const colorMap: Record<string, string> = {
-  Black: '#000000', White: '#FFFFFF', Red: '#EF4444', Green: '#22C55E',
-  Blue: '#3B82F6', Yellow: '#EAB308', Orange: '#F97316', Purple: '#A855F7',
-  Pink: '#EC4899', Brown: '#92400E', Gray: '#6B7280', Navy: '#1E3A5F',
-  Beige: '#D4B896', Teal: '#14B8A6',
-};
 
 const VariantSelector = ({ product, variants, cart }: VariantSelectorProps) => {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
