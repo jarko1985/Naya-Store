@@ -114,29 +114,77 @@ export async function findOrCreateGuestUser(email: string) {
   });
 }
 
-export async function updateUserAddress(data: ShippingAddress) {
+export async function updateUserAddress(data: ShippingAddress | { addressId: string }) {
   try {
     const session = await auth();
 
-    let currentUser = session?.user?.id
+    const currentUser = session?.user?.id
       ? await prisma.user.findFirst({ where: { id: session.user.id } })
       : null;
 
-    if (!currentUser) {
+    // Selecting a saved address book entry — copy its fields onto the
+    // active-selection cache (User.address), same as picking a fresh one.
+    if ('addressId' in data) {
+      if (!currentUser) {
+        return { success: false, message: 'Not authenticated' };
+      }
+
+      const saved = await prisma.address.findFirst({ where: { id: data.addressId } });
+      if (!saved || saved.userId !== currentUser.id) {
+        return { success: false, message: 'Address not found' };
+      }
+
+      const address: ShippingAddress = {
+        fullName: saved.fullName,
+        streetAddress: saved.streetAddress,
+        city: saved.city,
+        postalCode: saved.postalCode,
+        country: saved.country,
+        lat: saved.lat ?? undefined,
+        lng: saved.lng ?? undefined,
+      };
+
+      await prisma.user.update({ where: { id: currentUser.id }, data: { address } });
+
+      return { success: true, message: 'User updated successfully' };
+    }
+
+    let user = currentUser;
+
+    if (!user) {
       if (!data.email) {
         return { success: false, message: 'Email is required' };
       }
 
-      currentUser = await findOrCreateGuestUser(data.email);
-      await signIn('guest-checkout', { email: currentUser.email, redirect: false });
+      user = await findOrCreateGuestUser(data.email);
+      await signIn('guest-checkout', { email: user.email, redirect: false });
     }
 
     const address = shippingAddressSchema.parse(data);
 
     await prisma.user.update({
-      where: { id: currentUser.id },
+      where: { id: user.id },
       data: { address },
     });
+
+    // Keep the address book populated for real accounts, so a first-time
+    // submission doesn't leave /user/addresses empty.
+    if (!user.isGuest) {
+      const existingCount = await prisma.address.count({ where: { userId: user.id } });
+      await prisma.address.create({
+        data: {
+          userId: user.id,
+          fullName: address.fullName,
+          streetAddress: address.streetAddress,
+          city: address.city,
+          postalCode: address.postalCode,
+          country: address.country,
+          lat: address.lat ?? null,
+          lng: address.lng ?? null,
+          isDefault: existingCount === 0,
+        },
+      });
+    }
 
     return {
       success: true,

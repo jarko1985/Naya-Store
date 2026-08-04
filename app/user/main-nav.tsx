@@ -13,6 +13,14 @@ const links = [
     title: 'Orders',
     href: '/user/orders',
   },
+  {
+    title: 'Addresses',
+    href: '/user/addresses',
+  },
+  {
+    title: 'Payment Methods',
+    href: '/user/payment-methods',
+  },
 ];
 
 const MainNav = ({

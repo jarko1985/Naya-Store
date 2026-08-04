@@ -92,7 +92,12 @@ export const signUpFormSchema = z
     lat: z.number().optional(),
     lng: z.number().optional(),
   });
-  
+
+  // Schema for a saved address book entry
+  export const addressSchema = shippingAddressSchema.omit({ email: true }).extend({
+    label: z.string().optional(),
+  });
+
   // Schema for payment method
   export const paymentMethodSchema = z
     .object({
