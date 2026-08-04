@@ -4,15 +4,18 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { X, Star } from 'lucide-react';
 import { Product } from '@/types';
-import { formatCurrency } from '@/lib/utils';
+import { useCurrency } from '@/components/shared/currency/currency-provider';
 
 interface CompareTableProps {
   products: Product[];
   onRemove: (id: string) => void;
 }
 
-const rows: { label: string; render: (p: Product) => React.ReactNode }[] = [
-  { label: 'Price', render: (p) => formatCurrency(p.price) },
+function buildRows(
+  formatFromUsd: (amount: number | string | null) => string
+): { label: string; render: (p: Product) => React.ReactNode }[] {
+  return [
+  { label: 'Price', render: (p) => formatFromUsd(p.price) },
   {
     label: 'Rating',
     render: (p) => (
@@ -42,9 +45,12 @@ const rows: { label: string; render: (p: Product) => React.ReactNode }[] = [
     label: 'Availability',
     render: (p) => (p.stock > 0 ? <span className='text-green-600'>In Stock</span> : <span className='text-destructive'>Out of Stock</span>),
   },
-];
+  ];
+}
 
 const CompareTable = ({ products, onRemove }: CompareTableProps) => {
+  const { formatFromUsd } = useCurrency();
+  const rows = buildRows(formatFromUsd);
   return (
     <div className='overflow-x-auto'>
       <table className='w-full text-sm border-collapse'>

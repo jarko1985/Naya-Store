@@ -9,6 +9,7 @@ import type { NextAuthConfig } from 'next-auth';
 import { authConfig } from '@/auth.config';
 import { cookies } from 'next/headers';
 import { randomUUID } from 'crypto';
+import { SUPPORTED_CURRENCIES } from '@/lib/constants';
 
 // Twitter/X does not return an email address. Override createUser to generate
 // a unique placeholder so Prisma's NOT NULL email constraint is satisfied.
@@ -85,6 +86,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               name: user.name,
               email: user.email,
               role: user.role,
+              currency: user.currency,
             };
           }
         }
@@ -116,6 +118,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           email: user.email,
           role: user.role,
+          currency: user.currency,
         };
       },
     }),
@@ -126,6 +129,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Set the user ID from the token
       session.user.id = token.sub as string;
       session.user.role = typeof token.role === 'string' ? token.role : undefined;
+      session.user.currency = typeof token.currency === 'string' ? token.currency : undefined;
       session.user.name = token.name as string;
 
       // If there is an update, set the user name
@@ -153,8 +157,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
         }
 
+        const cookiesObject = await cookies();
+
+        // Currency preference: same merge-on-signin pattern as the guest
+        // cart below — the browser's cookie choice (if any) wins and gets
+        // persisted onto the account, so it carries over on next login from
+        // any device. Falls back to the account's saved preference on a
+        // fresh device with no cookie yet.
+        const currencyCookie = cookiesObject.get('currency')?.value;
+        if (
+          currencyCookie &&
+          (SUPPORTED_CURRENCIES as readonly string[]).includes(currencyCookie)
+        ) {
+          token.currency = currencyCookie;
+          if (currencyCookie !== user.currency) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { currency: currencyCookie },
+            });
+          }
+        } else {
+          token.currency = user.currency ?? 'USD';
+        }
+
         if (trigger === 'signIn' || trigger === 'signUp') {
-          const cookiesObject = await cookies();
           const sessionCartId = cookiesObject.get('sessionCartId')?.value;
 
           if (sessionCartId) {

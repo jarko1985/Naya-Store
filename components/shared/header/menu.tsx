@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import ModeToggle from './mode-toggle';
+import CurrencySwitcher from '@/components/shared/currency/currency-switcher';
 import Link from 'next/link';
 import { EllipsisVertical, ShoppingCart, UserIcon, Heart } from 'lucide-react';
 import {
@@ -16,6 +17,7 @@ const Menu = ({ cartCount = 0 }: { cartCount?: number }) => {
     <div className='flex justify-end gap-3'>
       <nav className='hidden md:flex w-full max-w-xs gap-1'>
         <ModeToggle />
+        <CurrencySwitcher />
         <Button asChild variant='ghost'>
           <Link href='/cart' className='relative'>
             <ShoppingCart /> Cart
@@ -77,10 +79,16 @@ const Menu = ({ cartCount = 0 }: { cartCount?: number }) => {
                 </Button>
               </div>
               <div className='border-t border-neutral-200 py-2 inline-flex items-center'>
-               
+
                 <ModeToggle />
                 <p className='mb-0 text-xs font-medium uppercase tracking-wider text-neutral-500'>
                   Theme
+                </p>
+              </div>
+              <div className='border-t border-neutral-200 py-2 inline-flex items-center gap-2 px-1'>
+                <CurrencySwitcher />
+                <p className='mb-0 text-xs font-medium uppercase tracking-wider text-neutral-500'>
+                  Currency
                 </p>
               </div>
               <div className='border-t border-neutral-200 py-2'/>

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { getProductSuggestions } from '@/lib/actions/product.action';
-import { formatCurrency } from '@/lib/utils';
+import { useCurrency } from '@/components/shared/currency/currency-provider';
 
 interface Suggestion {
   id: string;
@@ -18,6 +18,7 @@ interface Suggestion {
 }
 
 const SearchSuggestionsInput = () => {
+  const { formatFromUsd } = useCurrency();
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -81,7 +82,7 @@ const SearchSuggestionsInput = () => {
                 <p className='text-sm truncate'>{s.name}</p>
                 <p className='text-xs text-muted-foreground'>{s.category?.name}</p>
               </div>
-              <span className='text-sm font-medium shrink-0'>{formatCurrency(s.price)}</span>
+              <span className='text-sm font-medium shrink-0'>{formatFromUsd(s.price)}</span>
             </Link>
           ))}
           <button

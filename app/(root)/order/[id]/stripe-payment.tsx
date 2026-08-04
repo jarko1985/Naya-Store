@@ -9,15 +9,17 @@ import {
 } from '@stripe/react-stripe-js';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, getCurrencyDecimals } from '@/lib/utils';
 import { SERVER_URL } from '@/lib/constants';
 
 const StripePayment = ({
-  priceInCents,
+  priceInMinorUnits,
+  currency,
   orderId,
   clientSecret,
 }: {
-  priceInCents: number;
+  priceInMinorUnits: number;
+  currency: string;
   orderId: string;
   clientSecret: string;
 }) => {
@@ -80,7 +82,10 @@ const StripePayment = ({
         >
           {isLoading
             ? 'Purchasing...'
-            : `Purchase ${formatCurrency(priceInCents / 100)}`}
+            : `Purchase ${formatCurrency(
+                priceInMinorUnits / 10 ** getCurrencyDecimals(currency),
+                currency
+              )}`}
         </Button>
       </form>
     );

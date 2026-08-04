@@ -66,7 +66,7 @@ import {
                   {formatDateTime(order.createdAt).dateTime}
                 </TableCell>
                 <TableCell>{order.user.name}</TableCell>
-                <TableCell>{formatCurrency(order.totalPrice)}</TableCell>
+                <TableCell>{formatCurrency(order.totalPrice, order.currency)}</TableCell>
                 <TableCell className='hidden md:table-cell'>
                   {order.isPaid && order.paidAt
                     ? formatDateTime(order.paidAt).dateTime

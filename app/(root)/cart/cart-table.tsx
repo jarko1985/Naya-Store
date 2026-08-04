@@ -18,6 +18,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { useCurrency } from '@/components/shared/currency/currency-provider';
 
 function AddButton({ item }: { item: CartItem }) {
     const [isPending, startTransition] = useTransition();
@@ -76,6 +77,7 @@ function AddButton({ item }: { item: CartItem }) {
   }
   
   const CartTable = ({ cart }: { cart?: Cart }) => {
+    const { formatFromUsd } = useCurrency();
     return (
       <>
         <h1 className='py-4 h2-bold'>Shopping Cart</h1>
@@ -132,7 +134,7 @@ function AddButton({ item }: { item: CartItem }) {
                                 </span>
                               )}
                               <p className='text-xs text-muted-foreground mt-2'>
-                                ${unitPrice.toFixed(2)} each
+                                {formatFromUsd(unitPrice)} each
                               </p>
                             </div>
                           </Link>
@@ -149,7 +151,7 @@ function AddButton({ item }: { item: CartItem }) {
                           </div>
                         </TableCell>
                         <TableCell className='text-right px-4 font-semibold text-base whitespace-nowrap'>
-                          ${lineTotal.toFixed(2)}
+                          {formatFromUsd(lineTotal)}
                         </TableCell>
                       </TableRow>
                     );

@@ -1,10 +1,13 @@
+'use client';
+
 import Image from 'next/image';
 import { ShieldCheck, Lock, Truck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Cart } from '@/types';
-import { formatCurrency } from '@/lib/utils';
+import { useCurrency } from '@/components/shared/currency/currency-provider';
 
 const CheckoutOrderSummary = ({ cart }: { cart: Cart }) => {
+  const { formatFromUsd } = useCurrency();
   const itemCount = cart.items.reduce((a, c) => a + c.qty, 0);
   const discountAmount = Number(cart.discountAmount ?? 0);
 
@@ -43,7 +46,7 @@ const CheckoutOrderSummary = ({ cart }: { cart: Cart }) => {
                     </p>
                   )}
                 </div>
-                <p className='text-sm font-medium shrink-0'>{formatCurrency(item.price)}</p>
+                <p className='text-sm font-medium shrink-0'>{formatFromUsd(item.price)}</p>
               </div>
             ))}
           </div>
@@ -52,25 +55,25 @@ const CheckoutOrderSummary = ({ cart }: { cart: Cart }) => {
           <div className='px-5 py-4 border-t space-y-1.5 text-sm'>
             <div className='flex justify-between text-muted-foreground'>
               <span>Subtotal</span>
-              <span>{formatCurrency(cart.itemsPrice)}</span>
+              <span>{formatFromUsd(cart.itemsPrice)}</span>
             </div>
             {discountAmount > 0 && (
               <div className='flex justify-between text-green-600'>
                 <span>Discount{cart.couponCode ? ` (${cart.couponCode})` : ''}</span>
-                <span>-{formatCurrency(discountAmount)}</span>
+                <span>-{formatFromUsd(discountAmount)}</span>
               </div>
             )}
             <div className='flex justify-between text-muted-foreground'>
               <span>Shipping</span>
-              <span>{Number(cart.shippingPrice) === 0 ? 'Free' : formatCurrency(cart.shippingPrice)}</span>
+              <span>{Number(cart.shippingPrice) === 0 ? 'Free' : formatFromUsd(cart.shippingPrice)}</span>
             </div>
             <div className='flex justify-between text-muted-foreground'>
               <span>Tax</span>
-              <span>{formatCurrency(cart.taxPrice)}</span>
+              <span>{formatFromUsd(cart.taxPrice)}</span>
             </div>
             <div className='flex justify-between text-base font-bold pt-2 mt-1 border-t'>
               <span>Total</span>
-              <span>{formatCurrency(cart.totalPrice)}</span>
+              <span>{formatFromUsd(cart.totalPrice)}</span>
             </div>
           </div>
         </CardContent>

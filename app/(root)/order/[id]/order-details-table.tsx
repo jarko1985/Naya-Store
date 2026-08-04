@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { formatCurrency, formatDateTime, formatId } from '@/lib/utils';
+import { formatCurrency, formatDateTime, formatId, toMinorUnits } from '@/lib/utils';
 import { Order } from '@/types';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -52,6 +52,7 @@ const OrderDetailsTable = ({
     discountAmount,
     couponCode,
     totalPrice,
+    currency,
     paymentMethod,
     isDelivered,
     isPaid,
@@ -233,7 +234,7 @@ const OrderDetailsTable = ({
                             <span className='px-2'>{item.qty}</span>
                           </TableCell>
                           <TableCell className='text-right'>
-                            {formatCurrency(item.price)}
+                            {formatCurrency(item.price, currency)}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -251,29 +252,29 @@ const OrderDetailsTable = ({
                 <div className='space-y-1.5 text-sm'>
                   <div className='flex justify-between text-muted-foreground'>
                     <div>Items</div>
-                    <div>{formatCurrency(itemsPrice)}</div>
+                    <div>{formatCurrency(itemsPrice, currency)}</div>
                   </div>
                   {Number(discountAmount) > 0 && (
                     <div className='flex justify-between text-green-600'>
                       <div>Discount{couponCode ? ` (${couponCode})` : ''}</div>
-                      <div>-{formatCurrency(discountAmount)}</div>
+                      <div>-{formatCurrency(discountAmount, currency)}</div>
                     </div>
                   )}
                   <div className='flex justify-between text-muted-foreground'>
                     <div>Tax</div>
-                    <div>{formatCurrency(taxPrice)}</div>
+                    <div>{formatCurrency(taxPrice, currency)}</div>
                   </div>
                   <div className='flex justify-between text-muted-foreground'>
                     <div>Shipping</div>
                     <div>
                       {Number(shippingPrice) === 0
                         ? 'Free'
-                        : formatCurrency(shippingPrice)}
+                        : formatCurrency(shippingPrice, currency)}
                     </div>
                   </div>
                   <div className='flex justify-between text-base font-bold pt-2 mt-1 border-t'>
                     <div>Total</div>
-                    <div>{formatCurrency(totalPrice)}</div>
+                    <div>{formatCurrency(totalPrice, currency)}</div>
                   </div>
                 </div>
 
@@ -293,7 +294,8 @@ const OrderDetailsTable = ({
                 {/* Stripe Payment */}
                 {!isPaid && paymentMethod === 'Stripe' && stripeClientSecret && (
                   <StripePayment
-                    priceInCents={Number(order.totalPrice) * 100}
+                    priceInMinorUnits={toMinorUnits(Number(order.totalPrice), currency)}
+                    currency={currency}
                     orderId={order.id}
                     clientSecret={stripeClientSecret}
                   />

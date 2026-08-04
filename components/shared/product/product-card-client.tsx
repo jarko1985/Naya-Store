@@ -12,6 +12,7 @@ import Rating from "./rating";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Product } from "@/types";
+import { useCurrency } from "@/components/shared/currency/currency-provider";
 
 const usePrefersReducedMotion = () => {
   const [reduced, setReduced] = useState(false);
@@ -38,6 +39,7 @@ const ProductCardClient = ({
   isSignedIn,
   initialWishlisted,
 }: ProductCardClientProps) => {
+  const { formatFromUsd } = useCurrency();
   const cardRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
@@ -215,7 +217,7 @@ const ProductCardClient = ({
         <div className="mt-1 flex items-baseline gap-2">
           {hasCompareAt && (
             <span className="text-xs text-muted-foreground line-through">
-              ${numCompareAt!.toFixed(2)}
+              {formatFromUsd(numCompareAt!)}
             </span>
           )}
           {product.stock > 0 ? (

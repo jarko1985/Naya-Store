@@ -39,6 +39,8 @@ PurchaseReceiptEmail.PreviewProps = {
     shippingPrice: "10",
     itemsPrice: "80",
     discountAmount: "0",
+    currency: "USD",
+    exchangeRate: 1,
     orderitems: sampleData.products.map((x) => ({
       name: x.name,
       orderId: "123",
@@ -97,7 +99,7 @@ export default function PurchaseReceiptEmail({ order }: OrderInformationProps) {
                     Price Paid
                   </Text>
                   <Text className="mt-0 mr-4">
-                    {formatCurrency(order.totalPrice)}
+                    {formatCurrency(order.totalPrice, order.currency)}
                   </Text>
                 </Column>
               </Row>
@@ -121,7 +123,7 @@ export default function PurchaseReceiptEmail({ order }: OrderInformationProps) {
                     {item.name} x {item.qty}
                   </Column>
                   <Column align="right" className="align-top">
-                    {formatCurrency(item.price)}
+                    {formatCurrency(item.price, order.currency)}
                   </Column>
                 </Row>
               ))}
@@ -134,7 +136,7 @@ export default function PurchaseReceiptEmail({ order }: OrderInformationProps) {
                 <Row key={name} className="py-1">
                   <Column align="right">{name}: </Column>
                   <Column align="right" width={70} className="align-top">
-                    <Text className="m-0">{formatCurrency(price)}</Text>
+                    <Text className="m-0">{formatCurrency(price, order.currency)}</Text>
                   </Column>
                 </Row>
               ))}

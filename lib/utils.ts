@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import qs from 'query-string';
+import { CURRENCY_DECIMALS, CURRENCY_DISPLAY_AS_CODE, DEFAULT_CURRENCY } from '@/lib/constants';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -56,18 +57,59 @@ export function round2(value: number | string) {
     throw new Error('Value is not a number or string');
   }
 }
-const CURRENCY_FORMATTER = new Intl.NumberFormat('en-US', {
-  currency: 'USD',
-  style: 'currency',
-  minimumFractionDigits: 2,
-});
+export function getCurrencyDecimals(currency: string): number {
+  return CURRENCY_DECIMALS[currency] ?? 2;
+}
 
-// Format currency using the formatter above
-export function formatCurrency(amount: number | string | null) {
+export function roundToCurrency(value: number, currency: string): number {
+  const decimals = getCurrencyDecimals(currency);
+  const factor = 10 ** decimals;
+  return Math.round((value + Number.EPSILON) * factor) / factor;
+}
+
+// Converts a USD amount into `currency` using the given USD->currency rate,
+// rounded to that currency's own minor-unit precision.
+export function convert(usdAmount: number, rate: number, currency: string): number {
+  return roundToCurrency(usdAmount * rate, currency);
+}
+
+// Converts a decimal amount already denominated in `currency` into that
+// currency's smallest unit for the Stripe API (e.g. 10.00 AED -> 1000,
+// 10.000 KWD -> 10000).
+export function toMinorUnits(amount: number, currency: string): number {
+  return Math.round(amount * 10 ** getCurrencyDecimals(currency));
+}
+
+const currencyFormatters = new Map<string, Intl.NumberFormat>();
+
+function getCurrencyFormatter(currency: string): Intl.NumberFormat {
+  let formatter = currencyFormatters.get(currency);
+  if (!formatter) {
+    const decimals = CURRENCY_DECIMALS[currency] ?? 2;
+    formatter = new Intl.NumberFormat('en-US', {
+      currency,
+      style: 'currency',
+      currencyDisplay: CURRENCY_DISPLAY_AS_CODE.includes(currency) ? 'code' : 'symbol',
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+    currencyFormatters.set(currency, formatter);
+  }
+  return formatter;
+}
+
+// Format an amount in the given currency (defaults to USD). `amount` is
+// expected to already be denominated in `currency` — this only formats,
+// it does not convert.
+export function formatCurrency(
+  amount: number | string | null,
+  currency: string = DEFAULT_CURRENCY
+) {
+  const formatter = getCurrencyFormatter(currency);
   if (typeof amount === 'number') {
-    return CURRENCY_FORMATTER.format(amount);
+    return formatter.format(amount);
   } else if (typeof amount === 'string') {
-    return CURRENCY_FORMATTER.format(Number(amount));
+    return formatter.format(Number(amount));
   } else {
     return 'NaN';
   }

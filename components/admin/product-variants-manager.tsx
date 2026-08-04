@@ -18,6 +18,7 @@ import { UploadButton } from '@/lib/uploadthing';
 import { createProductVariant, deleteProductVariant } from '@/lib/actions/product.action';
 import { PRODUCT_SIZES, PRODUCT_COLORS } from '@/lib/constants';
 import { ProductVariant } from '@/types';
+import { formatCurrency } from '@/lib/utils';
 
 interface ProductVariantsManagerProps {
   productId: string;
@@ -133,7 +134,7 @@ const ProductVariantsManager = ({
                       </div>
                     </td>
                     <td className='py-2'>{v.size}</td>
-                    <td className='py-2'>${v.price}</td>
+                    <td className='py-2'>{formatCurrency(v.price)}</td>
                     <td className='py-2'>{v.stock}</td>
                     <td className='py-2'>
                       <Button

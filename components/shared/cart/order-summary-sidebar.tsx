@@ -8,13 +8,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Cart } from '@/types';
-import { formatCurrency, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { FREE_SHIPPING_THRESHOLD } from '@/lib/constants';
 import { applyCouponToCart, removeCouponFromCart } from '@/lib/actions/coupon.actions';
 import TrustBadgeRow from '@/components/shared/trust-badge-row';
+import { useCurrency } from '@/components/shared/currency/currency-provider';
 
 const OrderSummarySidebar = ({ cart }: { cart: Cart }) => {
   const router = useRouter();
+  const { formatFromUsd } = useCurrency();
   const [isPending, startTransition] = useTransition();
   const [isCouponPending, startCouponTransition] = useTransition();
   const [couponCode, setCouponCode] = useState('');
@@ -58,7 +60,7 @@ const OrderSummarySidebar = ({ cart }: { cart: Cart }) => {
             {remainingForFreeShipping > 0 ? (
               <p className='text-xs text-muted-foreground flex items-center gap-1.5'>
                 <Truck className='w-3.5 h-3.5' />
-                Add <span className='font-semibold text-foreground'>{formatCurrency(remainingForFreeShipping)}</span> more for free shipping
+                Add <span className='font-semibold text-foreground'>{formatFromUsd(remainingForFreeShipping)}</span> more for free shipping
               </p>
             ) : (
               <p className='text-xs text-green-600 font-medium flex items-center gap-1.5'>
@@ -117,25 +119,25 @@ const OrderSummarySidebar = ({ cart }: { cart: Cart }) => {
           <div className='space-y-1.5 text-sm border-t pt-3'>
             <div className='flex justify-between text-muted-foreground'>
               <span>Subtotal ({cart.items.reduce((a, c) => a + c.qty, 0)} items)</span>
-              <span>{formatCurrency(cart.itemsPrice)}</span>
+              <span>{formatFromUsd(cart.itemsPrice)}</span>
             </div>
             {discountAmount > 0 && (
               <div className='flex justify-between text-green-600'>
                 <span>Discount</span>
-                <span>-{formatCurrency(discountAmount)}</span>
+                <span>-{formatFromUsd(discountAmount)}</span>
               </div>
             )}
             <div className='flex justify-between text-muted-foreground'>
               <span>Shipping</span>
-              <span>{Number(cart.shippingPrice) === 0 ? 'Free' : formatCurrency(cart.shippingPrice)}</span>
+              <span>{Number(cart.shippingPrice) === 0 ? 'Free' : formatFromUsd(cart.shippingPrice)}</span>
             </div>
             <div className='flex justify-between text-muted-foreground'>
               <span>Tax</span>
-              <span>{formatCurrency(cart.taxPrice)}</span>
+              <span>{formatFromUsd(cart.taxPrice)}</span>
             </div>
             <div className='flex justify-between text-base font-bold pt-1.5 border-t'>
               <span>Total</span>
-              <span>{formatCurrency(cart.totalPrice)}</span>
+              <span>{formatFromUsd(cart.totalPrice)}</span>
             </div>
           </div>
 

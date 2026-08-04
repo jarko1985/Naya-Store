@@ -6,7 +6,12 @@ import { paymentMethodSchema } from '@/lib/validators';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DEFAULT_PAYMENT_METHOD, PAYMENT_METHODS } from '@/lib/constants';
+import {
+  DEFAULT_PAYMENT_METHOD,
+  PAYMENT_METHODS,
+  STRIPE_SUPPORTED_CURRENCIES,
+  PAYPAL_SUPPORTED_CURRENCIES,
+} from '@/lib/constants';
 import {
   Form,
   FormControl,
@@ -27,17 +32,41 @@ const PAYMENT_METHOD_META: Record<string, { icon: React.ElementType; description
   CashOnDelivery: { icon: Banknote, description: 'Pay with cash when your order arrives' },
 };
 
+// Providers not listed here (e.g. CashOnDelivery) have no processor and are
+// always available regardless of currency. Neither Stripe nor PayPal
+// support every currency in SUPPORTED_CURRENCIES (see lib/constants) — the
+// value charged must match what's displayed, so an unsupported provider is
+// hidden rather than silently charged in a different currency.
+const CURRENCY_SUPPORT: Record<string, readonly string[]> = {
+  Stripe: STRIPE_SUPPORTED_CURRENCIES,
+  PayPal: PAYPAL_SUPPORTED_CURRENCIES,
+};
+
+const isMethodSupported = (method: string, currency: string) =>
+  !CURRENCY_SUPPORT[method] || CURRENCY_SUPPORT[method].includes(currency);
+
 const PaymentMethodForm = ({
   preferredPaymentMethod,
+  activeCurrency,
 }: {
   preferredPaymentMethod: string | null;
+  activeCurrency: string;
 }) => {
   const router = useRouter();
+
+  const availableMethods = PAYMENT_METHODS.filter((pm) => isMethodSupported(pm, activeCurrency));
+  const preferredIsAvailable =
+    preferredPaymentMethod && isMethodSupported(preferredPaymentMethod, activeCurrency);
+  const defaultMethod = preferredIsAvailable
+    ? preferredPaymentMethod!
+    : isMethodSupported(DEFAULT_PAYMENT_METHOD, activeCurrency)
+      ? DEFAULT_PAYMENT_METHOD
+      : availableMethods[0];
 
   const form = useForm<z.infer<typeof paymentMethodSchema>>({
     resolver: zodResolver(paymentMethodSchema),
     defaultValues: {
-      type: preferredPaymentMethod || DEFAULT_PAYMENT_METHOD,
+      type: defaultMethod,
     },
   });
 
@@ -69,6 +98,13 @@ const PaymentMethodForm = ({
           </div>
         </div>
 
+        {availableMethods.length < PAYMENT_METHODS.length && (
+          <p className='text-xs text-muted-foreground mb-4'>
+            Some payment methods aren&apos;t available in {activeCurrency} — switch your
+            currency to unlock them, or continue with an option below.
+          </p>
+        )}
+
         <Form {...form}>
           <form
             method='post'
@@ -85,7 +121,7 @@ const PaymentMethodForm = ({
                       onValueChange={field.onChange}
                       className='flex flex-col gap-3'
                     >
-                      {PAYMENT_METHODS.map((paymentMethod) => {
+                      {availableMethods.map((paymentMethod) => {
                         const meta = PAYMENT_METHOD_META[paymentMethod];
                         const Icon = meta?.icon ?? Wallet;
                         const isSelected = field.value === paymentMethod;

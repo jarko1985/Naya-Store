@@ -9,6 +9,14 @@ const currency = z
     'Price must have exactly two decimal places'
   );
 
+// Order/OrderItem amounts are converted into the buyer's active currency at
+// order-creation time (Sprint 5), which may have 2 or 3 decimal places
+// depending on the currency (see CURRENCY_DECIMALS in lib/constants) —
+// unlike base product/cart prices, which always stay USD/2-decimal.
+const orderCurrencyAmount = z
+  .string()
+  .refine((value) => /^\d+\.\d{2,3}$/.test(value), 'Price must have 2 or 3 decimal places');
+
 
 export const insertProductSchema = z.object({
     name: z.string().min(3, 'Name must be at least 3 characters'),
@@ -111,23 +119,25 @@ export const signUpFormSchema = z
   // Schema for inserting order
   export const insertOrderSchema = z.object({
     userId: z.string().min(1, 'User is required'),
-    itemsPrice: currency,
-    shippingPrice: currency,
-    taxPrice: currency,
-    totalPrice: currency,
+    itemsPrice: orderCurrencyAmount,
+    shippingPrice: orderCurrencyAmount,
+    taxPrice: orderCurrencyAmount,
+    totalPrice: orderCurrencyAmount,
+    currency: z.string().min(1),
+    exchangeRate: z.coerce.number(),
     paymentMethod: z.string().refine((data) => PAYMENT_METHODS.includes(data), {
       message: 'Invalid payment method',
     }),
     shippingAddress: shippingAddressSchema,
   });
-  
+
   // Schema for inserting an order item
   export const insertOrderItemSchema = z.object({
     productId: z.string(),
     slug: z.string(),
     image: z.string(),
     name: z.string(),
-    price: currency,
+    price: orderCurrencyAmount,
     qty: z.number(),
     variantId: z.string().optional().nullable(),
     color: z.string().optional().nullable(),

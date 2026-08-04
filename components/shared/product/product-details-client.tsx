@@ -27,6 +27,8 @@ import { addItemToCart, removeItemFromCart } from "@/lib/actions/cart.actions";
 import { toggleWishlistItem } from "@/lib/actions/wishlist.actions";
 import { subscribeToStockAlert } from "@/lib/actions/stock-alert.actions";
 import { useCompare } from "@/lib/hooks/use-compare";
+import { useCurrency } from "@/components/shared/currency/currency-provider";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
 import { Input } from "@/components/ui/input";
 import ProductGallery from "./product-gallery";
 import ReviewSummaryCard from "./review-summary-card";
@@ -85,6 +87,7 @@ const ProductDetailsClient = ({
   reviews = [],
 }: ProductDetailsClientProps) => {
   const router = useRouter();
+  const { formatFromUsd } = useCurrency();
   const [isPending, startTransition] = useTransition();
   const [isWishlistPending, startWishlistTransition] = useTransition();
   const [isAlertPending, startAlertTransition] = useTransition();
@@ -333,8 +336,7 @@ const ProductDetailsClient = ({
     },
     {
       question: "How long does shipping take?",
-      answer:
-        "Standard delivery takes 5–10 business days. Orders above $100 ship free.",
+      answer: `Standard delivery takes 5–10 business days. Orders above ${formatFromUsd(FREE_SHIPPING_THRESHOLD)} ship free.`,
     },
     {
       question: "Can I return this item?",
@@ -409,7 +411,7 @@ const ProductDetailsClient = ({
         {/* ── 3. Price ── */}
         <div className="flex items-baseline gap-3 py-3 px-4 rounded-xl bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30">
           <span className="text-3xl font-extrabold text-orange-500">
-            ${displayPrice.toFixed(2)}
+            {formatFromUsd(displayPrice)}
           </span>
           {hasVariants && !selectedVariant && (
             <span className="text-sm text-muted-foreground font-normal">
@@ -752,11 +754,11 @@ const ProductDetailsClient = ({
             onToggle={() => setShippingOpen((p) => !p)}
             title={
               <span className="text-green-600 font-semibold">
-                Free Shipping (Orders ≥ $100)
+                Free Shipping (Orders ≥ {formatFromUsd(FREE_SHIPPING_THRESHOLD)})
               </span>
             }
             subtitle="Est. Delivery: 5 – 10 business days"
-            detail="Orders above $100 qualify for free standard shipping. Express options available at checkout. We ship to most countries worldwide."
+            detail={`Orders above ${formatFromUsd(FREE_SHIPPING_THRESHOLD)} qualify for free standard shipping. Express options available at checkout. We ship to most countries worldwide.`}
           />
 
           {/* Return Policy row */}
@@ -846,7 +848,7 @@ const ProductDetailsClient = ({
             <p className="text-xs text-muted-foreground truncate">
               {product.name}
             </p>
-            <p className="text-lg font-bold">${displayPrice.toFixed(2)}</p>
+            <p className="text-lg font-bold">{formatFromUsd(displayPrice)}</p>
           </div>
           <button
             type="button"

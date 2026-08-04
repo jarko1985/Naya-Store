@@ -1,5 +1,6 @@
 'use client';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 
 const Charts = ({
   data: { salesData },
@@ -23,7 +24,7 @@ const Charts = ({
           tickLine={false}
           axisLine={false}
           width={40}
-          tickFormatter={(value) => `$${value}`}
+          tickFormatter={(value) => formatCurrency(value)}
         />
         <Bar
           dataKey='totalSales'

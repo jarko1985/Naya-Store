@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/table';
 import Image from 'next/image';
 import { formatCurrency } from '@/lib/utils';
+import { getActiveCurrency, getExchangeRates, convert } from '@/lib/currency';
 import PlaceOrderForm from './place-order-form';
 import { MapPin, CreditCard, PackageCheck, Pencil, Lock } from 'lucide-react';
 
@@ -39,6 +40,15 @@ const PlaceOrderPage = async () => {
   if (!user.paymentMethod) redirect('/payment-method');
 
   const userAddress = user.address as ShippingAddress;
+
+  const activeCurrency = await getActiveCurrency();
+  const rates = await getExchangeRates();
+  const rate = rates[activeCurrency] ?? 1;
+  // Cart amounts are stored in USD; convert to the buyer's active currency
+  // for display here. This is preview-only — createOrder() re-converts and
+  // freezes the real charged amount at order-creation time.
+  const displayPrice = (usdAmount: number | string) =>
+    formatCurrency(convert(Number(usdAmount), rate, activeCurrency), activeCurrency);
 
   return (
     <>
@@ -142,7 +152,7 @@ const PlaceOrderPage = async () => {
                             <span className='px-2'>{item.qty}</span>
                           </TableCell>
                           <TableCell className='text-right'>
-                            {formatCurrency(item.price)}
+                            {displayPrice(item.price)}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -159,25 +169,25 @@ const PlaceOrderPage = async () => {
                 <div className='space-y-1.5 text-sm'>
                   <div className='flex justify-between text-muted-foreground'>
                     <div>Items</div>
-                    <div>{formatCurrency(cart.itemsPrice)}</div>
+                    <div>{displayPrice(cart.itemsPrice)}</div>
                   </div>
                   {Number(cart.discountAmount) > 0 && (
                     <div className='flex justify-between text-green-600'>
                       <div>Discount{cart.couponCode ? ` (${cart.couponCode})` : ''}</div>
-                      <div>-{formatCurrency(cart.discountAmount)}</div>
+                      <div>-{displayPrice(cart.discountAmount)}</div>
                     </div>
                   )}
                   <div className='flex justify-between text-muted-foreground'>
                     <div>Tax</div>
-                    <div>{formatCurrency(cart.taxPrice)}</div>
+                    <div>{displayPrice(cart.taxPrice)}</div>
                   </div>
                   <div className='flex justify-between text-muted-foreground'>
                     <div>Shipping</div>
-                    <div>{Number(cart.shippingPrice) === 0 ? 'Free' : formatCurrency(cart.shippingPrice)}</div>
+                    <div>{Number(cart.shippingPrice) === 0 ? 'Free' : displayPrice(cart.shippingPrice)}</div>
                   </div>
                   <div className='flex justify-between text-base font-bold pt-2 mt-1 border-t'>
                     <div>Total</div>
-                    <div>{formatCurrency(cart.totalPrice)}</div>
+                    <div>{displayPrice(cart.totalPrice)}</div>
                   </div>
                 </div>
                 <PlaceOrderForm />

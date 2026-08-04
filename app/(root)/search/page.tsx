@@ -6,32 +6,29 @@ import FiltersDrawer from '@/components/shared/search/filters-drawer';
 import { getAllProducts } from '@/lib/actions/product.action';
 import { getCategoryTree } from '@/lib/actions/category.actions';
 import { PRODUCT_COLORS, PRODUCT_SIZES, PRODUCT_COLOR_SWATCHES } from '@/lib/constants';
-import { flattenCategoryTree } from '@/lib/utils';
+import { flattenCategoryTree, formatCurrency } from '@/lib/utils';
+import { getActiveCurrency, getExchangeRates, convert } from '@/lib/currency';
 import Link from 'next/link';
 import { SearchX } from 'lucide-react';
 
-const prices = [
-  {
-    name: '$1 to $50',
-    value: '1-50',
-  },
-  {
-    name: '$51 to $100',
-    value: '51-100',
-  },
-  {
-    name: '$101 to $200',
-    value: '101-200',
-  },
-  {
-    name: '$201 to $500',
-    value: '201-500',
-  },
-  {
-    name: '$501 to $1000',
-    value: '501-1000',
-  },
+// The underlying filter still queries stored USD prices (`value` stays a raw
+// USD range) — only the displayed label is converted/formatted into the
+// buyer's active currency, so the range boundaries read naturally without
+// rewriting getAllProducts' price filter into a currency-aware range query.
+const PRICE_RANGE_BOUNDS: { value: string; min: number; max: number }[] = [
+  { value: '1-50', min: 1, max: 50 },
+  { value: '51-100', min: 51, max: 100 },
+  { value: '101-200', min: 101, max: 200 },
+  { value: '201-500', min: 201, max: 500 },
+  { value: '501-1000', min: 501, max: 1000 },
 ];
+
+function buildPriceRanges(activeCurrency: string, rate: number) {
+  return PRICE_RANGE_BOUNDS.map(({ value, min, max }) => ({
+    value,
+    name: `${formatCurrency(convert(min, rate, activeCurrency), activeCurrency)} to ${formatCurrency(convert(max, rate, activeCurrency), activeCurrency)}`,
+  }));
+}
 
 const ratings = [4, 3, 2, 1];
 
@@ -143,6 +140,10 @@ const SearchPage = async (props: {
       : [...sizeList, value];
     return getFilterUrl({ sz: next.length > 0 ? next.join(',') : 'all' });
   };
+
+  const activeCurrency = await getActiveCurrency();
+  const rates = await getExchangeRates();
+  const prices = buildPriceRanges(activeCurrency, rates[activeCurrency] ?? 1);
 
   const products = await getAllProducts({
     query: q,

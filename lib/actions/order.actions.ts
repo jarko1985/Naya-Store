@@ -1,6 +1,6 @@
 'use server';
 
-import { convertToPlainObject, formatError } from '../utils';
+import { convertToPlainObject, formatError, convert, getCurrencyDecimals } from '../utils';
 import { auth } from '@/auth';
 import { getMyCart } from './cart.actions';
 import { calcPrice } from '../cart-pricing';
@@ -8,13 +8,14 @@ import { getUserById } from './user.actions';
 import { insertOrderSchema } from '../validators';
 import { resolveCouponDiscount } from './coupon.actions';
 import { prisma } from '@/db/prisma';
-import { PAGE_SIZE } from '../constants';
+import { PAGE_SIZE, STRIPE_SUPPORTED_CURRENCIES, PAYPAL_SUPPORTED_CURRENCIES } from '../constants';
 import { CartItem, PaymentResult, ShippingAddress } from '@/types';
 import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { paypal } from '../paypal';
 import { revalidatePath } from 'next/cache';
 import { Prisma } from '@prisma/client';
 import { sendPurchaseReceipt } from '@/email';
+import { getActiveCurrency, getExchangeRates } from '../currency';
 
 export async function createOrder() {
     try {
@@ -79,15 +80,48 @@ export async function createOrder() {
       // discount (cart.totalPrice may be stale if it was computed before this re-check)
       const freshPricing = calcPrice(cart.items, discountAmount);
 
+      // Freeze the USD->currency conversion at order-creation time: cart
+      // amounts are always USD at rest, but the Order itself becomes a
+      // self-consistent snapshot in the buyer's active currency, and this
+      // exact converted total is what Stripe/PayPal actually charge — never
+      // a live rate recomputed later.
+      const activeCurrency = await getActiveCurrency();
+      const rates = await getExchangeRates();
+      const exchangeRate = rates[activeCurrency] ?? 1;
+      const decimals = getCurrencyDecimals(activeCurrency);
+      const toOrderCurrency = (usdAmount: number | string) =>
+        convert(Number(usdAmount), exchangeRate, activeCurrency).toFixed(decimals);
+
+      // Defense in depth: the payment-method UI already hides providers that
+      // can't charge the active currency, but re-check server-side too since
+      // paymentMethod/currency could otherwise disagree (e.g. currency
+      // switched after the payment method was saved).
+      if (user.paymentMethod === 'Stripe' && !STRIPE_SUPPORTED_CURRENCIES.includes(activeCurrency)) {
+        return {
+          success: false,
+          message: `Stripe can't charge in ${activeCurrency}. Choose a different currency or payment method.`,
+          redirectTo: '/payment-method',
+        };
+      }
+      if (user.paymentMethod === 'PayPal' && !PAYPAL_SUPPORTED_CURRENCIES.includes(activeCurrency)) {
+        return {
+          success: false,
+          message: `PayPal can't charge in ${activeCurrency}. Choose a different currency or payment method.`,
+          redirectTo: '/payment-method',
+        };
+      }
+
       // Create order object
       const order = insertOrderSchema.parse({
         userId: user.id,
         shippingAddress: user.address,
         paymentMethod: user.paymentMethod,
-        itemsPrice: freshPricing.itemsPrice,
-        shippingPrice: freshPricing.shippingPrice,
-        taxPrice: freshPricing.taxPrice,
-        totalPrice: freshPricing.totalPrice,
+        itemsPrice: toOrderCurrency(freshPricing.itemsPrice),
+        shippingPrice: toOrderCurrency(freshPricing.shippingPrice),
+        taxPrice: toOrderCurrency(freshPricing.taxPrice),
+        totalPrice: toOrderCurrency(freshPricing.totalPrice),
+        currency: activeCurrency,
+        exchangeRate,
       });
 
       // Create a transaction to create order and order items in database
@@ -97,7 +131,7 @@ export async function createOrder() {
           data: {
             ...order,
             couponCode: validatedCoupon?.valid ? validatedCoupon.coupon.code : null,
-            discountAmount,
+            discountAmount: toOrderCurrency(discountAmount),
           },
         });
 
@@ -119,7 +153,7 @@ export async function createOrder() {
               slug: item.slug,
               qty: item.qty,
               image: item.image,
-              price: item.price,
+              price: toOrderCurrency(item.price),
               variantId: item.variantId ?? null,
               color: item.color ?? null,
               size: item.size ?? null,
@@ -180,7 +214,7 @@ export async function createOrder() {
   
       if (order) {
         // Create paypal order
-        const paypalOrder = await paypal.createOrder(Number(order.totalPrice));
+        const paypalOrder = await paypal.createOrder(Number(order.totalPrice), order.currency);
   
         // Update order with paypal order id
         await prisma.order.update({
@@ -314,6 +348,7 @@ export async function createOrder() {
         taxPrice: updatedOrder.taxPrice.toString(),
         totalPrice: updatedOrder.totalPrice.toString(),
         discountAmount: updatedOrder.discountAmount.toString(),
+        exchangeRate: Number(updatedOrder.exchangeRate),
         shippingAddress: updatedOrder.shippingAddress as ShippingAddress,
         paymentResult: updatedOrder.paymentResult as PaymentResult,
       },
@@ -396,15 +431,19 @@ export async function getOrderSummary() {
   const productsCount = await prisma.product.count();
   const usersCount = await prisma.user.count();
 
-  // Calculate the total sales
-  const totalSales = await prisma.order.aggregate({
-    _sum: { totalPrice: true },
-  });
+  // Calculate the total sales. Orders can be placed in different
+  // currencies (Sprint 5), so each order's totalPrice is normalized back to
+  // USD via its own frozen exchangeRate (USD -> order.currency) before
+  // summing — a raw sum across currencies would be meaningless.
+  const totalSalesRaw = await prisma.$queryRaw<
+    Array<{ totalSalesUsd: Prisma.Decimal | null }>
+  >`SELECT sum("totalPrice" / "exchangeRate") as "totalSalesUsd" FROM "Order"`;
+  const totalSales = { _sum: { totalPrice: totalSalesRaw[0]?.totalSalesUsd ?? null } };
 
-  // Get monthly sales
+  // Get monthly sales (also USD-normalized, same reasoning as above)
   const salesDataRaw = await prisma.$queryRaw<
     Array<{ month: string; totalSales: Prisma.Decimal }>
-  >`SELECT to_char("createdAt", 'MM/YY') as "month", sum("totalPrice") as "totalSales" FROM "Order" GROUP BY to_char("createdAt", 'MM/YY')`;
+  >`SELECT to_char("createdAt", 'MM/YY') as "month", sum("totalPrice" / "exchangeRate") as "totalSales" FROM "Order" GROUP BY to_char("createdAt", 'MM/YY')`;
 
   const salesData: SalesDataType = salesDataRaw.map((entry) => ({
     month: entry.month,

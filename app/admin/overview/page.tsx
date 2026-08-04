@@ -111,7 +111,7 @@ import {
                       <TableCell className='hidden sm:table-cell'>
                         {formatDateTime(order.createdAt).dateOnly}
                       </TableCell>
-                      <TableCell>{formatCurrency(order.totalPrice)}</TableCell>
+                      <TableCell>{formatCurrency(order.totalPrice, order.currency)}</TableCell>
                       <TableCell>
                         <Link href={`/order/${order.id}`}>
                           <span className='px-2'>Details</span>

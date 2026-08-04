@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { productDefaultValues, PRODUCT_SIZES, PRODUCT_COLORS, PRODUCT_COLOR_SWATCHES as colorMap } from '@/lib/constants';
 import { insertProductSchema, updateProductSchema } from '@/lib/validators';
 import { Product } from '@/types';
+import { formatCurrency } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { ControllerRenderProps, SubmitHandler, useForm } from 'react-hook-form';
@@ -637,7 +638,7 @@ const ProductForm = ({
                           <td className='px-3 py-2'>
                             <Badge variant='outline' className='text-xs'>{v.size}</Badge>
                           </td>
-                          <td className='px-3 py-2 font-medium'>${v.price}</td>
+                          <td className='px-3 py-2 font-medium'>{formatCurrency(v.price)}</td>
                           <td className='px-3 py-2'>{v.stock}</td>
                           <td className='px-3 py-2'>
                             <Button

@@ -13,7 +13,7 @@ test('creates a paypal order', async () => {
   const token = await generateAccessToken();
   const price = 10.0;
 
-  const orderResponse = await paypal.createOrder(price);
+  const orderResponse = await paypal.createOrder(price, 'USD');
   console.log(orderResponse);
 
   expect(orderResponse).toHaveProperty('id');

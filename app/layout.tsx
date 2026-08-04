@@ -7,6 +7,8 @@ import { Toaster } from "@/components/ui/sonner";
 import ShapeGrid from "@/components/ShapeGrid";
 import GoogleAnalytics from "@/components/analytics/google-analytics";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { CurrencyProvider } from "@/components/shared/currency/currency-provider";
+import { getActiveCurrency, getExchangeRates } from "@/lib/currency";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -29,8 +31,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({ children }: { children: React.ReactNode }) {
   const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const [activeCurrency, exchangeRates] = await Promise.all([
+    getActiveCurrency(),
+    getExchangeRates(),
+  ]);
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -60,8 +66,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster />
+          <CurrencyProvider initialCurrency={activeCurrency} initialRates={exchangeRates}>
+            {children}
+            <Toaster />
+          </CurrencyProvider>
         </ThemeProvider>
       </body>
     </html>
