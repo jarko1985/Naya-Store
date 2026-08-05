@@ -14,6 +14,7 @@ import {
   import Pagination from '@/components/shared/pagination';
   import DeleteDialog from '@/components/shared/delete-dialog';
   import { requireAdmin } from '@/lib/auth-guard';
+  import { SHIPMENT_STATUS_LABELS, ShipmentStatus } from '@/lib/constants';
   
   export const metadata: Metadata = {
     title: 'Admin Orders',
@@ -54,7 +55,7 @@ import {
               <TableHead>BUYER</TableHead>
               <TableHead>TOTAL</TableHead>
               <TableHead className='hidden md:table-cell'>PAID</TableHead>
-              <TableHead className='hidden md:table-cell'>DELIVERED</TableHead>
+              <TableHead className='hidden md:table-cell'>SHIPMENT</TableHead>
               <TableHead>ACTIONS</TableHead>
             </TableRow>
           </TableHeader>
@@ -73,9 +74,9 @@ import {
                     : 'Not Paid'}
                 </TableCell>
                 <TableCell className='hidden md:table-cell'>
-                  {order.isDelivered && order.deliveredAt
-                    ? formatDateTime(order.deliveredAt).dateTime
-                    : 'Not Delivered'}
+                  {order.shipment
+                    ? SHIPMENT_STATUS_LABELS[order.shipment.status as ShipmentStatus]
+                    : SHIPMENT_STATUS_LABELS.pending}
                 </TableCell>
                 <TableCell className='flex gap-1'>
                   <Button asChild variant='outline' size='sm'>

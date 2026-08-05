@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { formatNumberWithDecimal } from './utils';
-import { PAYMENT_METHODS } from './constants';
+import { PAYMENT_METHODS, SHIPMENT_STATUSES } from './constants';
 
 const currency = z
   .string()
@@ -151,6 +151,15 @@ export const signUpFormSchema = z
     email_address: z.string(),
     pricePaid: z.string(),
   });
+
+  // Schema for updating a shipment's status/carrier/tracking number
+  export const shipmentUpdateSchema = z.object({
+    status: z.string().refine((data) => SHIPMENT_STATUSES.includes(data as (typeof SHIPMENT_STATUSES)[number]), {
+      message: 'Invalid shipment status',
+    }),
+    carrier: z.string().trim().optional().or(z.literal('')),
+    trackingNumber: z.string().trim().optional().or(z.literal('')),
+  });
   
   // Schema for updating the user profile
   export const updateProfileSchema = z.object({
@@ -229,4 +238,23 @@ export const signUpFormSchema = z
 
   export const updateCouponSchema = insertCouponSchema.extend({
     id: z.string().min(1, 'Id is required'),
+  });
+
+  // Schema for a customer requesting a return on one or more order items
+  export const returnRequestSchema = z.object({
+    orderId: z.string().min(1, 'Order is required'),
+    reason: z.string().min(3, 'Reason must be at least 3 characters'),
+    items: z
+      .array(
+        z.object({
+          orderItemId: z.string().min(1, 'Order item is required'),
+          qty: z.number().int().positive('Quantity must be at least 1'),
+        })
+      )
+      .min(1, 'Select at least one item to return'),
+  });
+
+  // Schema for an admin decision (approve/reject/resolve) on a return
+  export const returnDecisionSchema = z.object({
+    adminNote: z.string().trim().optional().or(z.literal('')),
   });

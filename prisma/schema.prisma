@@ -83,6 +83,7 @@ model User {
   Wishlist       Wishlist[]
   RecentlyViewed RecentlyViewed[]
   Address        Address[]
+  returns        Return[]
 }
 
 model Account {
@@ -153,11 +154,25 @@ model Order {
   exchangeRate    Decimal     @default(1) @db.Decimal(18, 8)
   isPaid          Boolean     @default(false)
   paidAt          DateTime?   @db.Timestamp(6)
-  isDelivered     Boolean     @default(false)
-  deliveredAt     DateTime?   @db.Timestamp(6)
   createdAt       DateTime    @default(now()) @db.Timestamp(6)
   user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderitems      OrderItem[]
+  shipment        Shipment?
+  returns         Return[]
+}
+
+model Shipment {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId          String    @unique @db.Uuid
+  order            Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  carrier          String?
+  trackingNumber   String?
+  status           String    @default("pending")
+  shippedAt        DateTime? @db.Timestamp(6)
+  outForDeliveryAt DateTime? @db.Timestamp(6)
+  deliveredAt      DateTime? @db.Timestamp(6)
+  createdAt        DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime  @updatedAt
 }
 model OrderItem {
   id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -173,6 +188,35 @@ model OrderItem {
   size      String?
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  returnItems ReturnItem[]
+}
+
+model Return {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId      String       @db.Uuid
+  order        Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId       String       @db.Uuid
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason       String
+  status       String       @default("requested")
+  adminNote    String?
+  refundAmount Decimal?     @db.Decimal(12, 3)
+  refundedAt   DateTime?    @db.Timestamp(6)
+  createdAt    DateTime     @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime     @updatedAt
+  items        ReturnItem[]
+
+  @@index([orderId])
+  @@index([userId])
+}
+
+model ReturnItem {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  returnId    String    @db.Uuid
+  return      Return    @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  orderItemId String    @db.Uuid
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  qty         Int
 }
 model Review {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

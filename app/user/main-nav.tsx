@@ -14,6 +14,10 @@ const links = [
     href: '/user/orders',
   },
   {
+    title: 'Returns',
+    href: '/user/returns',
+  },
+  {
     title: 'Addresses',
     href: '/user/addresses',
   },

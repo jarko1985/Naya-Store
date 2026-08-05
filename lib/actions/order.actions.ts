@@ -9,7 +9,7 @@ import { insertOrderSchema } from '../validators';
 import { resolveCouponDiscount } from './coupon.actions';
 import { prisma } from '@/db/prisma';
 import { PAGE_SIZE, STRIPE_SUPPORTED_CURRENCIES, PAYPAL_SUPPORTED_CURRENCIES } from '../constants';
-import { CartItem, PaymentResult, ShippingAddress } from '@/types';
+import { CartItem, Order, PaymentResult, ShippingAddress } from '@/types';
 import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { paypal } from '../paypal';
 import { revalidatePath } from 'next/cache';
@@ -160,6 +160,12 @@ export async function createOrder() {
             },
           });
         }
+        // Every order gets a Shipment row from the moment it's placed —
+        // it's the "Placed" step's backing state, not just a post-payment add-on.
+        await tx.shipment.create({
+          data: { orderId: insertedOrder.id, status: 'pending' },
+        });
+
         // Clear cart
         await tx.cart.update({
           where: { id: cart.id },
@@ -198,10 +204,12 @@ export async function createOrder() {
       include: {
         orderitems: true,
         user: { select: { name: true, email: true } },
+        shipment: true,
+        returns: { include: { items: { include: { orderItem: true } } }, orderBy: { createdAt: 'desc' } },
       },
     });
-  
-    return convertToPlainObject(data);
+
+    return convertToPlainObject(data) as unknown as Order | null;
   }
   export async function createPayPalOrder(orderId: string) {
     try {
@@ -335,6 +343,8 @@ export async function createOrder() {
       include: {
         orderitems: true,
         user: { select: { name: true, email: true } },
+        shipment: true,
+        returns: { include: { items: { include: { orderItem: true } } } },
       },
     });
   
@@ -351,6 +361,7 @@ export async function createOrder() {
         exchangeRate: Number(updatedOrder.exchangeRate),
         shippingAddress: updatedOrder.shippingAddress as ShippingAddress,
         paymentResult: updatedOrder.paymentResult as PaymentResult,
+        returns: updatedOrder.returns as unknown as Order['returns'],
       },
     });
   }
@@ -365,35 +376,6 @@ export async function createOrder() {
       return { success: false, message: formatError(error) };
     }
   }
-  export async function deliverOrder(orderId: string) {
-    try {
-      const order = await prisma.order.findFirst({
-        where: {
-          id: orderId,
-        },
-      });
-  
-      if (!order) throw new Error('Order not found');
-      if (!order.isPaid) throw new Error('Order is not paid');
-  
-      await prisma.order.update({
-        where: { id: orderId },
-        data: {
-          isDelivered: true,
-          deliveredAt: new Date(),
-        },
-      });
-  
-      revalidatePath(`/order/${orderId}`);
-  
-      return {
-        success: true,
-        message: 'Order has been marked delivered',
-      };
-    } catch (error) {
-      return { success: false, message: formatError(error) };
-    }
-  }
   export async function getMyOrders({
     limit = PAGE_SIZE,
     page,
@@ -403,12 +385,13 @@ export async function createOrder() {
   }) {
     const session = await auth();
     if (!session) throw new Error('User is not authorized');
-  
+
     const data = await prisma.order.findMany({
       where: { userId: session?.user?.id },
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: (page - 1) * limit,
+      include: { shipment: true },
     });
   
     const dataCount = await prisma.order.count({
@@ -496,7 +479,7 @@ export async function getAllOrders({
     orderBy: { createdAt: 'desc' },
     take: limit,
     skip: (page - 1) * limit,
-    include: { user: { select: { name: true } } },
+    include: { user: { select: { name: true } }, shipment: true },
   });
 
   const dataCount = await prisma.order.count();

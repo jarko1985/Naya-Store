@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import ScrollStack, { ScrollStackItem } from "@/components/ScrollStack";
+import { RETURN_WINDOW_DAYS } from "@/lib/constants";
 
 type Promotion = {
   icon: LucideIcon;
@@ -29,9 +30,8 @@ const promotions: Promotion[] = [
   },
   {
     icon: ShieldCheck,
-    title: "30-Day Returns",
-    description:
-      "Not in love with it? Return any item within 30 days for a full refund, hassle-free.",
+    title: `${RETURN_WINDOW_DAYS}-Day Returns`,
+    description: `Not in love with it? Return any item within ${RETURN_WINDOW_DAYS} days for a full refund, hassle-free.`,
     image: "/images/banners/stack2.jpg",
   },
   {

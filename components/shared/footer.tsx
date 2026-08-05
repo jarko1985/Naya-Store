@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import NewsletterForm from './footer/newsletter-form';
 import Logo from './logo';
+import { RETURN_WINDOW_DAYS } from '@/lib/constants';
 
 const features = [
   {
@@ -238,13 +239,13 @@ export default function Footer() {
               <p className='text-sm text-gray-500'>Guarantee for all products at naya.store</p>
             </div>
           </div>
-          {/* Return 28 days */}
+          {/* Return window */}
           <div className='flex items-center gap-4'>
             <div className='w-14 h-14 rounded-full border-2 border-black flex items-center justify-center shrink-0'>
-              <span className='text-sm font-bold'>28</span>
+              <span className='text-sm font-bold'>{RETURN_WINDOW_DAYS}</span>
             </div>
             <div>
-              <p className='font-bold text-sm'>Return within 28 days</p>
+              <p className='font-bold text-sm'>Return within {RETURN_WINDOW_DAYS} days</p>
               <p className='text-sm text-gray-500'>of receiving your order</p>
             </div>
           </div>

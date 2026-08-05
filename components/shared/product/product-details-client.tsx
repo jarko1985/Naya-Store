@@ -28,7 +28,7 @@ import { toggleWishlistItem } from "@/lib/actions/wishlist.actions";
 import { subscribeToStockAlert } from "@/lib/actions/stock-alert.actions";
 import { useCompare } from "@/lib/hooks/use-compare";
 import { useCurrency } from "@/components/shared/currency/currency-provider";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
+import { FREE_SHIPPING_THRESHOLD, RETURN_WINDOW_DAYS } from "@/lib/constants";
 import { Input } from "@/components/ui/input";
 import ProductGallery from "./product-gallery";
 import ReviewSummaryCard from "./review-summary-card";
@@ -340,8 +340,7 @@ const ProductDetailsClient = ({
     },
     {
       question: "Can I return this item?",
-      answer:
-        "Yes — unworn items in original packaging can be returned within 30 days for a full refund or exchange.",
+      answer: `Yes — unworn items in original packaging can be returned within ${RETURN_WINDOW_DAYS} days for a full refund or exchange.`,
     },
   ];
 
@@ -768,8 +767,8 @@ const ProductDetailsClient = ({
             open={returnOpen}
             onToggle={() => setReturnOpen((p) => !p)}
             title="Return Policy"
-            subtitle="30-day hassle-free returns"
-            detail="Not satisfied? Return any item within 30 days of delivery for a full refund or exchange. Items must be unworn and in original packaging."
+            subtitle={`${RETURN_WINDOW_DAYS}-day hassle-free returns`}
+            detail={`Not satisfied? Return any item within ${RETURN_WINDOW_DAYS} days of delivery for a full refund or exchange. Items must be unworn and in original packaging.`}
           />
 
           {/* Security row */}

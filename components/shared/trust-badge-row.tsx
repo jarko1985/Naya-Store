@@ -1,11 +1,11 @@
 import { Truck, ShieldCheck, RotateCcw, Headphones } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
+import { FREE_SHIPPING_THRESHOLD, RETURN_WINDOW_DAYS } from "@/lib/constants";
 
 const badges = [
   { icon: Truck, label: `Free shipping over $${FREE_SHIPPING_THRESHOLD}` },
   { icon: ShieldCheck, label: "Secure payment" },
-  { icon: RotateCcw, label: "Easy 28-day returns" },
+  { icon: RotateCcw, label: `Easy ${RETURN_WINDOW_DAYS}-day returns` },
   { icon: Headphones, label: "24×7 support" },
 ];
 

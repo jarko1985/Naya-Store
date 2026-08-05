@@ -1,4 +1,4 @@
-import { insertProductSchema, insertCartSchema, cartItemSchema, shippingAddressSchema, insertOrderItemSchema, insertOrderSchema, paymentResultSchema, insertReviewSchema, insertCouponSchema } from '@/lib/validators';
+import { insertProductSchema, insertCartSchema, cartItemSchema, shippingAddressSchema, insertOrderItemSchema, insertOrderSchema, paymentResultSchema, insertReviewSchema, insertCouponSchema, returnRequestSchema } from '@/lib/validators';
 import { z } from 'zod';
 
 export type ProductVariant = {
@@ -51,7 +51,41 @@ export type Product = z.infer<typeof insertProductSchema> & {
     isDefault: boolean;
     createdAt: Date;
   };
-export type OrderItem = z.infer<typeof insertOrderItemSchema>;
+export type OrderItem = z.infer<typeof insertOrderItemSchema> & { id: string };
+export type Shipment = {
+  id: string;
+  orderId: string;
+  carrier: string | null;
+  trackingNumber: string | null;
+  status: string;
+  shippedAt: Date | null;
+  outForDeliveryAt: Date | null;
+  deliveredAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+export type ReturnRequestInput = z.infer<typeof returnRequestSchema>;
+export type ReturnItem = {
+  id: string;
+  returnId: string;
+  orderItemId: string;
+  qty: number;
+  orderItem: OrderItem;
+};
+export type Return = {
+  id: string;
+  orderId: string;
+  userId: string;
+  reason: string;
+  status: string;
+  adminNote: string | null;
+  refundAmount: string | null;
+  refundedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  items: ReturnItem[];
+  order?: { id: string; currency: string; user: { name: string; email: string } };
+};
 export type Order = z.infer<typeof insertOrderSchema> & {
   id: string;
   couponCode?: string | null;
@@ -59,9 +93,9 @@ export type Order = z.infer<typeof insertOrderSchema> & {
   createdAt: Date;
   isPaid: boolean;
   paidAt: Date | null;
-  isDelivered: boolean;
-  deliveredAt: Date | null;
+  shipment: Shipment | null;
   orderitems: OrderItem[];
+  returns: Return[];
   user: { name: string; email: string };
   paymentResult: PaymentResult;
 };

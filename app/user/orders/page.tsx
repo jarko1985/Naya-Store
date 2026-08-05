@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table';
 import Pagination from '@/components/shared/pagination';
 import BuyAgainButton from '@/components/shared/order/buy-again-button';
+import { SHIPMENT_STATUS_LABELS, ShipmentStatus } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'My Orders',
@@ -37,7 +38,7 @@ const OrdersPage = async (props: {
               <TableHead>DATE</TableHead>
               <TableHead>TOTAL</TableHead>
               <TableHead>PAID</TableHead>
-              <TableHead>DELIVERED</TableHead>
+              <TableHead>SHIPMENT</TableHead>
               <TableHead>ACTIONS</TableHead>
             </TableRow>
           </TableHeader>
@@ -55,9 +56,9 @@ const OrdersPage = async (props: {
                     : 'Not Paid'}
                 </TableCell>
                 <TableCell>
-                  {order.isDelivered && order.deliveredAt
-                    ? formatDateTime(order.deliveredAt).dateTime
-                    : 'Not Delivered'}
+                  {order.shipment
+                    ? SHIPMENT_STATUS_LABELS[order.shipment.status as ShipmentStatus]
+                    : SHIPMENT_STATUS_LABELS.pending}
                 </TableCell>
                 <TableCell>
                   <Link href={`/order/${order.id}`}>

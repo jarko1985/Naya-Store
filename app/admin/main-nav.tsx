@@ -30,6 +30,10 @@ const links = [
     href: '/admin/orders',
   },
   {
+    title: 'Returns',
+    href: '/admin/returns',
+  },
+  {
     title: 'Coupons',
     href: '/admin/coupons',
   },

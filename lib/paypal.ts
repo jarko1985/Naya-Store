@@ -42,6 +42,33 @@ export const paypal = {
     });
     return handleResponse(response);
   },
+  // Refunds all or part of a previously captured payment. captureId is the
+  // capture id stored as Order.paymentResult.id for a PayPal order. Only
+  // USD/EUR/GBP ever reach here (PAYPAL_SUPPORTED_CURRENCIES), all 2-decimal,
+  // so .toFixed(2) is always correct, same reasoning as createOrder above.
+  refundCapture: async function refundCapture(
+    captureId: string,
+    amount: number,
+    currency: string
+  ) {
+    const accessToken = await generateAccessToken();
+    const url = `${base}/v2/payments/captures/${captureId}/refund`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        amount: {
+          currency_code: currency,
+          value: amount.toFixed(2),
+        },
+      }),
+    });
+    return handleResponse(response);
+  },
 };
 
 // Generate paypal access token

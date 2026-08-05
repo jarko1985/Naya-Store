@@ -25,11 +25,15 @@ import {
   createPayPalOrder,
   approvePayPalOrder,
   updateOrderToPaidCOD,
-  deliverOrder,
 } from '@/lib/actions/order.actions';
 import StripePayment from './stripe-payment';
 import OrderConfirmationBanner from '@/components/shared/order/order-confirmation-banner';
-import { MapPin, CreditCard, PackageCheck } from 'lucide-react';
+import ShipmentTimeline from '@/components/shared/order/shipment-timeline';
+import ShipmentStatusForm from '@/components/shared/order/shipment-status-form';
+import ReturnRequestForm from '@/components/shared/order/return-request-form';
+import ReturnStatusBadge from '@/components/shared/order/return-status-badge';
+import { RETURN_WINDOW_DAYS } from '@/lib/constants';
+import { MapPin, CreditCard, PackageCheck, Truck, RotateCcw } from 'lucide-react';
 
 const OrderDetailsTable = ({
   order,
@@ -54,11 +58,17 @@ const OrderDetailsTable = ({
     totalPrice,
     currency,
     paymentMethod,
-    isDelivered,
     isPaid,
     paidAt,
-    deliveredAt,
+    createdAt,
+    shipment,
+    returns,
   } = order;
+
+  const withinReturnWindow =
+    !!shipment?.deliveredAt &&
+    (Date.now() - new Date(shipment.deliveredAt).getTime()) / (1000 * 60 * 60 * 24) <=
+      RETURN_WINDOW_DAYS;
 
 
   const PrintLoadingState = () => {
@@ -110,26 +120,6 @@ const OrderDetailsTable = ({
     );
   };
 
-  // Button to mark order as delivered
-  const MarkAsDeliveredButton = () => {
-    const [isPending, startTransition] = useTransition();
-
-    return (
-      <Button
-        type='button'
-        disabled={isPending}
-        onClick={() =>
-          startTransition(async () => {
-            const res = await deliverOrder(order.id);
-            toast.success(res.message);
-          })
-        }
-      >
-        {isPending ? 'processing...' : 'Mark As Delivered'}
-      </Button>
-    );
-  };
-
   return (
     <>
       <OrderConfirmationBanner />
@@ -163,21 +153,78 @@ const OrderDetailsTable = ({
 
             <Card>
               <CardContent className='p-5'>
-                <div className='flex items-center justify-between mb-3'>
-                  <h2 className='flex items-center gap-2 font-semibold'>
+                <h2 className='flex items-center gap-2 font-semibold mb-3'>
+                  <span className='flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary'>
+                    <Truck className='w-4 h-4' />
+                  </span>
+                  Shipment Status
+                </h2>
+                <ShipmentTimeline shipment={shipment} placedAt={createdAt} />
+                {shipment && (shipment.carrier || shipment.trackingNumber) && (
+                  <p className='text-sm text-muted-foreground mt-4'>
+                    {[shipment.carrier, shipment.trackingNumber].filter(Boolean).join(' — ')}
+                  </p>
+                )}
+                {isAdmin && shipment && (
+                  <div className='mt-4 pt-4 border-t'>
+                    <ShipmentStatusForm orderId={id} shipment={shipment} />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {(returns.length > 0 || (!isAdmin && isPaid && shipment?.status === 'delivered' && withinReturnWindow)) && (
+              <Card>
+                <CardContent className='p-5'>
+                  <h2 className='flex items-center gap-2 font-semibold mb-3'>
                     <span className='flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary'>
-                      <MapPin className='w-4 h-4' />
+                      <RotateCcw className='w-4 h-4' />
                     </span>
-                    Shipping Address
+                    Returns
                   </h2>
-                  {isDelivered ? (
-                    <Badge variant='secondary'>
-                      Delivered at {formatDateTime(deliveredAt!).dateTime}
-                    </Badge>
-                  ) : (
-                    <Badge variant='destructive'>Not Delivered</Badge>
+                  {returns.length > 0 && (
+                    <div className='space-y-2 mb-3'>
+                      {returns.map((ret) => (
+                        <div
+                          key={ret.id}
+                          className='flex items-center justify-between rounded-md border p-3 text-sm'
+                        >
+                          <div>
+                            <p className='font-medium'>{formatId(ret.id)}</p>
+                            <p className='text-xs text-muted-foreground'>
+                              {ret.items.length} item(s) &middot; {formatDateTime(ret.createdAt).dateTime}
+                            </p>
+                            {ret.status === 'resolved' && ret.refundAmount && (
+                              <p className='text-xs text-muted-foreground'>
+                                Refunded {formatCurrency(ret.refundAmount, currency)}
+                              </p>
+                            )}
+                          </div>
+                          <ReturnStatusBadge status={ret.status} />
+                        </div>
+                      ))}
+                    </div>
                   )}
-                </div>
+                  {!isAdmin && isPaid && shipment?.status === 'delivered' && withinReturnWindow && (
+                    <ReturnRequestForm
+                      orderId={id}
+                      orderitems={orderitems}
+                      returns={returns}
+                      currency={currency}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            <Card>
+              <CardContent className='p-5'>
+                <h2 className='flex items-center gap-2 font-semibold mb-3'>
+                  <span className='flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary'>
+                    <MapPin className='w-4 h-4' />
+                  </span>
+                  Shipping Address
+                </h2>
                 <p className='text-sm font-medium'>{shippingAddress.fullName}</p>
                 <p className='text-sm text-muted-foreground'>
                   {shippingAddress.streetAddress}, {shippingAddress.city},{' '}
@@ -305,7 +352,6 @@ const OrderDetailsTable = ({
                 {isAdmin && !isPaid && paymentMethod === 'CashOnDelivery' && (
                   <MarkAsPaidButton />
                 )}
-                {isAdmin && isPaid && !isDelivered && <MarkAsDeliveredButton />}
               </CardContent>
             </Card>
           </div>

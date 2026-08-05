@@ -183,3 +183,55 @@ export const STRIPE_SUPPORTED_CURRENCIES: string[] = [
   "KWD",
   "TRY",
 ];
+
+// 'pending' isn't its own timeline step — it just means "placed, not yet
+// shipped". The timeline's first step ("Placed") is always complete and
+// comes from Order.createdAt, independent of this field.
+export const SHIPMENT_STATUSES = [
+  "pending",
+  "shipped",
+  "out_for_delivery",
+  "delivered",
+] as const;
+
+export type ShipmentStatus = (typeof SHIPMENT_STATUSES)[number];
+
+export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
+  pending: "Order Placed",
+  shipped: "Shipped",
+  out_for_delivery: "Out for Delivery",
+  delivered: "Delivered",
+};
+
+// Used to enforce forward-only status transitions and to determine which
+// timeline steps are "complete" relative to the current status.
+export const SHIPMENT_STATUS_RANK: Record<ShipmentStatus, number> = {
+  pending: 0,
+  shipped: 1,
+  out_for_delivery: 2,
+  delivered: 3,
+};
+
+// Single source of truth for the "N-day returns" policy — also used for
+// eligibility enforcement in requestReturn(), not just marketing copy.
+export const RETURN_WINDOW_DAYS = 30;
+
+export const RETURN_STATUSES = ['requested', 'approved', 'rejected', 'resolved'] as const;
+
+export type ReturnStatus = (typeof RETURN_STATUSES)[number];
+
+export const RETURN_STATUS_LABELS: Record<ReturnStatus, string> = {
+  requested: 'Requested',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  resolved: 'Resolved',
+};
+
+// Return status is a branching state machine (approve/reject fork, then a
+// single resolve step), not a linear progression like SHIPMENT_STATUS_RANK.
+export const RETURN_STATUS_TRANSITIONS: Record<ReturnStatus, ReturnStatus[]> = {
+  requested: ['approved', 'rejected'],
+  approved: ['resolved'],
+  rejected: [],
+  resolved: [],
+};
